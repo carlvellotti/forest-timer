@@ -49,6 +49,31 @@ export function thisWeek(records, now) {
   return { days, total }
 }
 
+// Rule 3: the streak is how many days in a row, up to today, you finished at least one session.
+// Rule 4: today doesn't break it until it's over, so with nothing yet today it counts back from yesterday.
+// Rule 5: given-up sessions don't count. Days are your own, in your time zone, by when each session finished.
+export function streak(records, now) {
+  const dayKey = (day) => `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`
+  const finishedDays = new Set(
+    records.filter((record) => record.ended === 'finished').map((record) => dayKey(new Date(record.endedAt))),
+  )
+  let day = startOfDay(now)
+  if (!finishedDays.has(dayKey(day))) day = addDays(day, -1)
+  let count = 0
+  while (finishedDays.has(dayKey(day))) {
+    count += 1
+    day = addDays(day, -1)
+  }
+  return count
+}
+
+// "1-day streak", "3-day streak"; at zero, the page shows the no-streak line instead
+export function streakLine(count) {
+  return `${count}-day streak`
+}
+
+export const NO_STREAK_LINE = 'No streak yet. Finish a session to start one.'
+
 // "1 session this week", "9 sessions this week"
 export function weekTotalLine(total) {
   return `${total} ${total === 1 ? 'session' : 'sessions'} this week`

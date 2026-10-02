@@ -156,3 +156,80 @@ test('the tree you just grew keeps its ring through Stats and back (you never le
   await page.getByRole('link', { name: 'Back to forest' }).click()
   await expect(page.getByRole('img', { name: 'Tree you just grew' })).toBeVisible()
 })
+
+// The streak (slice 2)
+const monToWed = [[9, 28, 9], [9, 29, 9], [9, 30, 9]]
+
+test('rule 3: finished Mon, Tue, Wed; on Wednesday it reads "3-day streak", big, above the week', async ({ page }) => {
+  await seedFinished(page, monToWed)
+  await openAt(page, new Date('2026-09-30T20:00:00'), '/stats')
+  const line = page.getByText('3-day streak')
+  await expect(line).toBeVisible()
+  await expect(line).toHaveCSS('font-size', '90px')
+  await expect(line).toHaveCSS('color', ink)
+  const week = await page.getByText('3 sessions this week').boundingBox()
+  expect((await line.boundingBox()).y + (await line.boundingBox()).height).toBeLessThanOrEqual(week.y)
+  // Where the timer sits: a third of the way down
+  const height = await page.evaluate(() => window.innerHeight)
+  expect((await line.boundingBox()).y).toBeCloseTo(height * 0.3, 0)
+})
+
+test('rule 4: Thursday 9am with nothing yet, still "3-day streak"; finish one, "4-day streak"', async ({ page }) => {
+  await seedFinished(page, monToWed)
+  await openAt(page, thursdayAtNine)
+  await page.getByRole('link', { name: 'Stats' }).click()
+  await expect(page.getByText('3-day streak')).toBeVisible()
+  await page.getByRole('link', { name: 'Back to forest' }).click()
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(minutes(25))
+  await page.getByRole('link', { name: 'Stats' }).click()
+  await expect(page.getByText('4-day streak')).toBeVisible()
+})
+
+test('rule 4: skip Thursday, and Friday reads "No streak yet. Finish a session to start one." in body text and ink', async ({ page }) => {
+  await seedFinished(page, monToWed)
+  await openAt(page, new Date('2026-10-02T09:00:00'), '/stats')
+  const line = page.getByText('No streak yet. Finish a session to start one.')
+  await expect(line).toBeVisible()
+  await expect(line).toHaveCSS('font-size', '16px')
+  await expect(line).toHaveCSS('color', ink)
+  await expect(page.getByText(/-day streak/)).toHaveCount(0)
+})
+
+test('one day reads "1-day streak"', async ({ page }) => {
+  await seedFinished(page, [[9, 30, 9]])
+  await openAt(page, new Date('2026-09-30T20:00:00'), '/stats')
+  await expect(page.getByText('1-day streak')).toBeVisible()
+})
+
+test('a streak runs back past Monday into last week', async ({ page }) => {
+  await seedFinished(page, [[9, 25, 9], [9, 26, 9], [9, 27, 9], [9, 28, 9], [9, 29, 9]])
+  await openAt(page, new Date('2026-09-29T20:00:00'), '/stats')
+  await expect(page.getByText('5-day streak')).toBeVisible()
+})
+
+test('Mon and Tue finished, Wednesday only given up: on Thursday there is no streak', async ({ page }) => {
+  await seedFinished(page, [[9, 28, 9], [9, 29, 9], [9, 30, 9, 'gave up']])
+  await openAt(page, thursdayAtNine, '/stats')
+  await expect(page.getByText('No streak yet. Finish a session to start one.')).toBeVisible()
+})
+
+test('a long streak still fits the screen', async ({ page }) => {
+  const days = Array.from({ length: 120 }, (_, i) => {
+    const day = new Date(2026, 8, 30 - i)
+    return [day.getMonth() + 1, day.getDate(), 9]
+  })
+  await seedFinished(page, days)
+  await openAt(page, new Date('2026-09-30T20:00:00'), '/stats')
+  await expect(page.getByText('120-day streak')).toBeVisible()
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
+  expect(overflow).toBe(0)
+})
+
+test('rule 4, page open: Thursday 11:59pm with nothing on Thursday, and at midnight the streak is gone', async ({ page }) => {
+  await seedFinished(page, monToWed)
+  await openAt(page, new Date('2026-10-01T23:59:00'), '/stats')
+  await expect(page.getByText('3-day streak')).toBeVisible()
+  await page.clock.runFor(minutes(2))
+  await expect(page.getByText('No streak yet. Finish a session to start one.')).toBeVisible()
+})

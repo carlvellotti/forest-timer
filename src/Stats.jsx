@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { nextMidnight, thisWeek, weekTotalLine } from './stats'
+import { NO_STREAK_LINE, nextMidnight, streak, streakLine, thisWeek, weekTotalLine } from './stats'
 
 // Moves on at midnight, and whenever the page comes back into view, so the week is never a day behind.
 function useToday() {
@@ -17,10 +17,11 @@ function useToday() {
   return now
 }
 
-// The stats page: this week's finished sessions, day by day. It only reads the session records.
+// The stats page: your streak, big, with this week's finished sessions under it. It only reads the session records.
 function Stats({ records, onBack }) {
   const now = useToday()
   const week = thisWeek(records, now)
+  const days = streak(records, now)
   return (
     <>
       <nav className="absolute top-0 left-0 p-screen">
@@ -31,7 +32,13 @@ function Stats({ records, onBack }) {
         </Button>
       </nav>
       <section className="flex flex-col items-center px-screen pt-timer-top pb-gap">
-        <p>{weekTotalLine(week.total)}</p>
+        {/* The page's one big thing, where the timer sits; at zero, a quiet line that never scolds */}
+        {days > 0 ? (
+          <p className="text-center text-timer">{streakLine(days)}</p>
+        ) : (
+          <p className="text-center">{NO_STREAK_LINE}</p>
+        )}
+        <p className="mt-gap">{weekTotalLine(week.total)}</p>
         <table className="mt-gap border-separate border-spacing-x-gap text-center">
           <thead>
             <tr>

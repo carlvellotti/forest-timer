@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { nextMidnight, thisWeek, weekTotalLine } from './stats'
+import { nextMidnight, streak, streakLine, thisWeek, weekTotalLine } from './stats'
 
 // Local times, so these read the same in any time zone. 2026-09-28 is a Monday.
 const at = (day, hour, minute = 0) => new Date(2026, 8, day, hour, minute)
@@ -71,4 +71,44 @@ test('a Sunday is the last day of its week', () => {
 
 test('the next midnight is the start of tomorrow', () => {
   expect(nextMidnight(at(27, 23, 59))).toBe(at(28, 0).getTime())
+})
+
+// The streak. 2026-09-28 is a Monday, so 1 October is Thursday and 2 October is Friday.
+const october = (day, hour, minute = 0) => new Date(2026, 9, day, hour, minute)
+const monToWed = [finishedAt(28, 9), finishedAt(29, 9), finishedAt(30, 9)]
+
+test('rule 3: finished Mon, Tue, Wed; on Wednesday it reads "3-day streak"', () => {
+  expect(streak(monToWed, at(30, 20))).toBe(3)
+  expect(streakLine(3)).toBe('3-day streak')
+})
+
+test('rule 4: Thursday 9am with nothing yet, still 3; finish one Thursday, 4; skip Thursday, and Friday is 0', () => {
+  expect(streak(monToWed, october(1, 9))).toBe(3)
+  const thursday = record(october(1, 9), october(1, 9, 25))
+  expect(streak([...monToWed, thursday], october(1, 9, 30))).toBe(4)
+  expect(streak(monToWed, october(2, 9))).toBe(0)
+})
+
+test('one day reads "1-day streak"', () => {
+  expect(streak([finishedAt(30, 9)], at(30, 12))).toBe(1)
+  expect(streakLine(1)).toBe('1-day streak')
+})
+
+test('a streak runs back past Monday into last week', () => {
+  const sinceFriday = [25, 26, 27, 28, 29].map((day) => finishedAt(day, 9))
+  expect(streak(sinceFriday, at(29, 12))).toBe(5)
+})
+
+test('Mon and Tue finished, Wednesday only given up: on Thursday the streak is 0', () => {
+  const gaveUpWednesday = record(at(30, 9), at(30, 9, 10), 'gave up')
+  expect(streak([finishedAt(28, 9), finishedAt(29, 9), gaveUpWednesday], october(1, 9))).toBe(0)
+})
+
+test('a session from 11:50pm to 12:15am counts on the day it finished, for the streak too', () => {
+  const lateTuesday = record(at(29, 23, 50), at(30, 0, 15))
+  expect(streak([finishedAt(28, 9), lateTuesday], at(30, 12))).toBe(1)
+})
+
+test('no sessions at all: no streak', () => {
+  expect(streak([], at(30, 12))).toBe(0)
 })
