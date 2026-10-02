@@ -3,6 +3,7 @@ import {
   FAST_SESSION_LENGTH_MS,
   SESSION_LENGTH_MS,
   finishedRecord,
+  givenUpRecord,
   formatTimeLeft,
   sessionLength,
   tabTitle,
@@ -48,5 +49,13 @@ test('rule 9: a finished session record ends 25 minutes after Start, however lat
     startedAt: new Date(nine).toISOString(),
     endedAt: new Date(nine + minutes(25)).toISOString(),
     ended: 'finished',
+  })
+})
+
+test('rule 3: a given-up session record ends when you gave up', () => {
+  expect(givenUpRecord(nine, nine + minutes(12))).toEqual({
+    startedAt: new Date(nine).toISOString(),
+    endedAt: new Date(nine + minutes(12)).toISOString(),
+    ended: 'gave up',
   })
 })

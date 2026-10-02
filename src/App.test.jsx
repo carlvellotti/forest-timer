@@ -58,3 +58,28 @@ test('a session still goes back to ready when the record cannot be saved', () =>
   expect(screen.getByRole('timer').textContent).toBe('25:00')
   setItem.mockRestore()
 })
+
+test('rule 3: Give up asks first; Keep going carries on; Give up ends with no tree', () => {
+  render(<App />)
+  fireEvent.click(screen.getByRole('button', { name: 'Start' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Give up' }))
+  expect(screen.getByText('Give up? No tree this time.')).toBeTruthy()
+  fireEvent.click(screen.getByRole('button', { name: 'Keep going' }))
+  expect(screen.queryByText('Give up? No tree this time.')).toBeNull()
+  fireEvent.click(screen.getByRole('button', { name: 'Give up' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Give up' }))
+  expect(screen.getByRole('button', { name: 'Start' })).toBeTruthy()
+  expect(screen.queryAllByRole('img', { name: /tree/i })).toHaveLength(0)
+  expect(screen.getByText('Finish a session to grow your first tree.')).toBeTruthy()
+})
+
+test('rule 9: a Give up that lands after 25 minutes have passed counts as finished', () => {
+  render(<App />)
+  fireEvent.click(screen.getByRole('button', { name: 'Start' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Give up' }))
+  // The clock passes 9:25 before the once-a-second tick notices
+  vi.setSystemTime(new Date('2026-10-01T09:25:00.500'))
+  fireEvent.click(screen.getByRole('button', { name: 'Give up' }))
+  expect(screen.getByRole('img', { name: 'Tree you just grew' })).toBeTruthy()
+  expect(JSON.parse(localStorage.getItem('forest-timer:session-records'))[0].ended).toBe('finished')
+})

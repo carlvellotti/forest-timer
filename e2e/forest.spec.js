@@ -16,6 +16,10 @@ test('ready: the timer reads 25:00 with Start under it, no Give up, plain tab ti
   await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()
   await expect(page.getByText('Give up')).toHaveCount(0)
   await expect(page).toHaveTitle('Forest Timer')
+  // Start sits under the timer
+  const timer = await page.getByRole('timer').boundingBox()
+  const start = await page.getByRole('button', { name: 'Start' }).boundingBox()
+  expect(start.y).toBeGreaterThan(timer.y + timer.height)
 })
 
 test('press Start: Start disappears, Give up appears, and a second later it reads 24:59', async ({ page }) => {
@@ -151,6 +155,85 @@ test('rule 9: start at 9:00, the clock jumps to 9:40, and the session has finish
   await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')))
   await expect(page.getByRole('img', { name: 'Tree you just grew' })).toBeVisible()
   await expect(page.getByRole('timer')).toHaveText('25:00')
+  expect(await sessionRecords(page)).toEqual([
+    { startedAt: nine.getTime(), endedAt: nine.getTime() + minutes(25), ended: 'finished' },
+  ])
+})
+
+const question = 'Give up? No tree this time.'
+
+test('rule 3: at 9:12 Give up asks in place, with Keep going and Give up; Keep going carries on', async ({ page }) => {
+  await openAtNine(page)
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(minutes(12))
+  await page.getByRole('button', { name: 'Give up' }).click()
+  await expect(page.getByText(question)).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Keep going' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Give up' })).toBeVisible()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect(page.getByRole('timer')).toHaveText('13:00')
+  // Keep going is the moss-green button; Give up stays the quiet, underlined, muted link; no Start
+  await expect(page.getByRole('button', { name: 'Keep going' })).toHaveCSS('background-color', 'rgb(47, 93, 58)')
+  await page.mouse.move(0, 0)
+  await expect(page.getByRole('button', { name: 'Give up' })).toHaveCSS('color', 'rgb(111, 106, 99)')
+  await expect(page.getByRole('button', { name: 'Give up' })).toHaveCSS('text-decoration-line', 'underline')
+  await expect(page.getByRole('button', { name: 'Start' })).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'Keep going' }).click()
+  await expect(page.getByText(question)).toHaveCount(0)
+  await page.clock.runFor(1000)
+  await expect(page.getByRole('timer')).toHaveText('12:59')
+})
+
+test('rule 3: Give up, then Give up: back to ready, no new tree, a given-up record saved', async ({ page }) => {
+  await openAtNine(page)
+  // Grow one tree first (9:00 to 9:25), so "no new tree" means the forest still has one
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(minutes(30))
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(minutes(12))
+  await page.getByRole('button', { name: 'Give up' }).click()
+  await page.getByRole('button', { name: 'Give up' }).click()
+  await expect(page.getByRole('timer')).toHaveText('25:00')
+  await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()
+  await expect(page.getByText(question)).toHaveCount(0)
+  await expect(page.getByRole('img', { name: /tree/i })).toHaveCount(1)
+  await expect(page.getByRole('img', { name: 'Tree you just grew' })).toHaveCount(0)
+  expect(await sessionRecords(page)).toEqual([
+    { startedAt: nine.getTime(), endedAt: nine.getTime() + minutes(25), ended: 'finished' },
+    { startedAt: nine.getTime() + minutes(30), endedAt: nine.getTime() + minutes(42), ended: 'gave up' },
+  ])
+})
+
+test('asking to give up never moves the timer, and a finished session doesn\'t bring the question back', async ({ page }) => {
+  await openAtNine(page)
+  await page.getByRole('button', { name: 'Start' }).click()
+  const before = await page.getByRole('timer').boundingBox()
+  await page.getByRole('button', { name: 'Give up' }).click()
+  await expect(page.getByRole('button', { name: 'Keep going' })).toBeFocused()
+  expect(await page.getByRole('timer').boundingBox()).toEqual(before)
+  // The question sits under the timer
+  const asking = await page.getByText(question).boundingBox()
+  expect(asking.y).toBeGreaterThan(before.y + before.height)
+
+  await page.clock.runFor(minutes(25))
+  await page.getByRole('button', { name: 'Start' }).click()
+  await expect(page.getByText(question)).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Give up' })).toBeVisible()
+})
+
+test('rule 3: with 0:02 left, click Give up and wait: at 0:00 the question goes and the tree grows', async ({ page }) => {
+  await openAtNine(page)
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(minutes(25) - 2000)
+  await expect(page.getByRole('timer')).toHaveText('0:02')
+  await page.getByRole('button', { name: 'Give up' }).click()
+  await expect(page.getByText(question)).toBeVisible()
+  await page.clock.runFor(2000)
+  await expect(page.getByText(question)).toHaveCount(0)
+  await expect(page.getByRole('img', { name: 'Tree you just grew' })).toBeVisible()
+  await expect(page.getByRole('timer')).toHaveText('25:00')
+  await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()
   expect(await sessionRecords(page)).toEqual([
     { startedAt: nine.getTime(), endedAt: nine.getTime() + minutes(25), ended: 'finished' },
   ])

@@ -32,6 +32,14 @@ export function finishedRecord(startedAt, length) {
   }
 }
 
+export function givenUpRecord(startedAt, endedAt) {
+  return {
+    startedAt: new Date(startedAt).toISOString(),
+    endedAt: new Date(endedAt).toISOString(),
+    ended: 'gave up',
+  }
+}
+
 export function tabTitle(running, ms) {
   return running ? `${formatTimeLeft(ms)} · Forest Timer` : 'Forest Timer'
 }
