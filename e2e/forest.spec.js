@@ -350,6 +350,83 @@ test('rule 10: no button anywhere wipes the forest', async ({ page }) => {
   await expect(page.getByRole('img', { name: /tree/i })).toHaveCount(40)
 })
 
+// Counts every note the page plays, and when (on the test clock), plus when the newest ringed tree appeared.
+async function listenForChimes(page) {
+  await page.addInitScript(() => {
+    window.chimes = []
+    const start = OscillatorNode.prototype.start
+    OscillatorNode.prototype.start = function (...args) {
+      window.chimes.push(Date.now())
+      return start.apply(this, args)
+    }
+    window.treeGrewAt = null
+    new MutationObserver(() => {
+      if (window.treeGrewAt === null && document.querySelector('[aria-label="Tree you just grew"]')) {
+        window.treeGrewAt = Date.now()
+      }
+    }).observe(document, { childList: true, subtree: true })
+  })
+}
+const chimes = (page) => page.evaluate(() => window.chimes)
+
+test('rule 2: finishing plays the chime once; giving up plays nothing', async ({ page }) => {
+  await listenForChimes(page)
+  await openAtNine(page)
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(minutes(5))
+  await page.getByRole('button', { name: 'Give up' }).click()
+  await page.getByRole('button', { name: 'Give up' }).click()
+  await page.clock.runFor(minutes(30))
+  expect(await chimes(page)).toEqual([])
+
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(minutes(25))
+  await expect(page.getByRole('img', { name: 'Tree you just grew' })).toBeVisible()
+  await page.clock.runFor(minutes(5))
+  expect(await chimes(page)).toHaveLength(1)
+})
+
+test('the chime plays on time while the page is in a background tab', async ({ page }) => {
+  await listenForChimes(page)
+  await openAtNine(page)
+  // A background tab slows repeating timers down (Chrome: to once a minute). Here they're
+  // slowed to once every 7 minutes, so the once-a-second tick alone would only notice at 9:28.
+  // This can't reproduce Chrome's real slowdown; it shows the finish doesn't wait for that tick.
+  await page.evaluate(() => {
+    const setInterval = window.setInterval
+    window.setInterval = (callback, delay, ...rest) => setInterval(callback, Math.max(delay, 7 * 60 * 1000), ...rest)
+  })
+  await page.getByRole('button', { name: 'Start' }).click()
+  // Switch to another tab: the page is hidden for the rest of the session
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' })
+    Object.defineProperty(document, 'hidden', { configurable: true, get: () => true })
+    document.dispatchEvent(new Event('visibilitychange'))
+  })
+  await page.clock.runFor(minutes(25))
+  expect(await page.evaluate(() => document.visibilityState)).toBe('hidden')
+  expect(await chimes(page)).toEqual([nine.getTime() + minutes(25)])
+  await expect(page.getByRole('img', { name: 'Tree you just grew' })).toBeVisible()
+})
+
+test('a locked phone (page frozen past 9:25) chimes when you come back, at the same moment the tree appears', async ({ page }) => {
+  await listenForChimes(page)
+  await openAtNine(page)
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(minutes(10))
+  // Locked at 9:10: the page is frozen, so nothing runs until 9:40.
+  // The test clock stands still, so "same moment" here means the same step that grows the tree.
+  // It can't show that a real iPhone lets the sound wake up again without a press.
+  await page.clock.setSystemTime(new Date('2026-10-01T09:40:00'))
+  expect(await chimes(page)).toEqual([])
+  // Unlocked: the page comes back into view
+  await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')))
+  await expect(page.getByRole('img', { name: 'Tree you just grew' })).toBeVisible()
+  const comeBack = new Date('2026-10-01T09:40:00').getTime()
+  expect(await chimes(page)).toEqual([comeBack])
+  expect(await page.evaluate(() => window.treeGrewAt)).toBe(comeBack)
+})
+
 test('nothing runs off the side of the screen', async ({ page }) => {
   await page.goto('/')
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)

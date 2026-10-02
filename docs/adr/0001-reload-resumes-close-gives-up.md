@@ -30,3 +30,7 @@ Opening the app in a second tab while it's open in a first tab is *not* "opening
 This was first decided as "a reload after the 25 minutes is a give-up." It was changed to **finished** while the spec's assumptions were being checked, because the app also has to work on phones. Phones often reload a tab on their own after it has sat in the background (start at 9:00, lock the phone, open the browser at 9:40, and the tab reloads). The app can't tell that reload from one you did. Calling it a give-up would clash with the sleep rule, where the clock keeps running and a session that finishes while the device sleeps still grows its tree. Now a reload follows the same rule as sleep: the clock runs from Start. Closing the tab or browser, and a crash, still count as giving up.
 
 Trade-off accepted: a reload after 25 minutes grows a tree even if you'd wandered off.
+
+## Addendum: no chime after a reload (2026-10-02)
+
+A late reload grows the tree, with its ring, but plays no chime. After a reload, browsers won't play sound until you press something on the page, and the press that allowed sound before the reload doesn't carry over. The choice was between no chime and a chime on your next tap, which could come much later and feel random. The ring is enough.

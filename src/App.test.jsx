@@ -1,8 +1,12 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import App from './App'
+import { playChime, unlockChime } from './chime'
+
+vi.mock('./chime', () => ({ playChime: vi.fn(), unlockChime: vi.fn() }))
 
 beforeEach(() => {
+  vi.clearAllMocks()
   localStorage.clear()
   vi.useFakeTimers()
   vi.setSystemTime(new Date('2026-10-01T09:00:00'))
@@ -82,4 +86,18 @@ test('rule 9: a Give up that lands after 25 minutes have passed counts as finish
   fireEvent.click(screen.getByRole('button', { name: 'Give up' }))
   expect(screen.getByRole('img', { name: 'Tree you just grew' })).toBeTruthy()
   expect(JSON.parse(localStorage.getItem('forest-timer:session-records'))[0].ended).toBe('finished')
+})
+
+test('rule 2: finishing plays the chime once; giving up plays nothing', () => {
+  render(<App />)
+  fireEvent.click(screen.getByRole('button', { name: 'Start' }))
+  expect(unlockChime).toHaveBeenCalledTimes(1)
+  fireEvent.click(screen.getByRole('button', { name: 'Give up' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Give up' }))
+  expect(playChime).not.toHaveBeenCalled()
+
+  fireEvent.click(screen.getByRole('button', { name: 'Start' }))
+  act(() => vi.advanceTimersByTime(25 * 60 * 1000))
+  act(() => vi.advanceTimersByTime(60 * 1000))
+  expect(playChime).toHaveBeenCalledTimes(1)
 })
