@@ -2,6 +2,7 @@ import { expect, test } from 'vitest'
 import {
   FAST_SESSION_LENGTH_MS,
   SESSION_LENGTH_MS,
+  finishedRecord,
   formatTimeLeft,
   sessionLength,
   tabTitle,
@@ -40,4 +41,12 @@ test('fast mode: ?fast makes a session 25 seconds, but only in dev', () => {
   expect(sessionLength({ dev: true, search: '?fast' })).toBe(FAST_SESSION_LENGTH_MS)
   expect(sessionLength({ dev: true, search: '' })).toBe(SESSION_LENGTH_MS)
   expect(sessionLength({ dev: false, search: '?fast' })).toBe(SESSION_LENGTH_MS)
+})
+
+test('rule 9: a finished session record ends 25 minutes after Start, however late it was noticed', () => {
+  expect(finishedRecord(nine, SESSION_LENGTH_MS)).toEqual({
+    startedAt: new Date(nine).toISOString(),
+    endedAt: new Date(nine + minutes(25)).toISOString(),
+    ended: 'finished',
+  })
 })

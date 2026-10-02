@@ -38,6 +38,7 @@ spacing:
   screen-padding: 26px
   gap: 14px
   tree-gap: 6px
+  tree: 24px
 components:
   button-primary:
     background: "{colors.primary}"
@@ -107,7 +108,7 @@ None. Things appear and change without animation: no bounces, pops or pulses.
 
 - **Start:** a solid moss-green block with stone text and a small filled play icon.
 - **Give up:** a quiet underlined text link in the muted color, under the timer while a session is running. Start and Give up are never on screen together. It isn't a button.
-- **Forest:** soft moss pines in a row. The tree you just grew gets a small orange dashed ring around it, like stitching on a badge, until you press Start again or leave the page. Otherwise, trees have no ring.
+- **Forest:** soft moss pines in a row, each in a 24px square (with room inside for the ring), so roughly a dozen fit in a row on a phone and a few dozen on a laptop. The tree you just grew gets a small orange dashed ring around it, like stitching on a badge, until you press Start again or leave the page. Otherwise, trees have no ring.
 
 ## Do's and don'ts
 

@@ -23,6 +23,15 @@ export function formatTimeLeft(ms) {
   return `${minutes}:${String(seconds % 60).padStart(2, '0')}`
 }
 
+// Rule 9: a finished session ended 25 minutes after Start, even if the laptop slept past it.
+export function finishedRecord(startedAt, length) {
+  return {
+    startedAt: new Date(startedAt).toISOString(),
+    endedAt: new Date(startedAt + length).toISOString(),
+    ended: 'finished',
+  }
+}
+
 export function tabTitle(running, ms) {
   return running ? `${formatTimeLeft(ms)} · Forest Timer` : 'Forest Timer'
 }
