@@ -31,3 +31,6 @@ playwright-report
 .env*
 builder-skills/
 .claude/
+
+# Cloudflare local files
+.wrangler/
