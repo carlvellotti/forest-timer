@@ -8,7 +8,7 @@ What it is and why: idea.md. What we're building: docs/specs/. 2026-10-01-spec.m
 - Test: npm test for checks (Vitest), npm run test:e2e for click-throughs (Playwright, at phone and laptop size; it starts the app itself).
 - Lint: npm run lint. One warning, in src/components/ui/button.jsx, is shadcn's own and expected.
 - See: open the app in the browser at phone (390px) and laptop (1440px) width.
-- On your phone or laptop: this machine is a server on Tailscale. Run `npx vite --host 100.106.120.33` and open http://100.106.120.33:5173. Never use plain `--host`, which also puts it on the public internet.
+- On your phone: run `npm run dev -- --host` on your home wifi and open the Network address it prints.
 - To try a session by hand, open the dev app with `?fast` and a session lasts 25 seconds.
 - Save: commit with a one-line note.
 
