@@ -85,7 +85,7 @@ One font family everywhere: EB Garamond, an old-book serif. The timer is the big
 
 ## Layout
 
-The timer sits alone in the middle with plenty of empty space around it, like the one fern on a field-guide page. Below it, divided off by a single thin line, is the forest: one row of trees along the ground, like a real treeline. Use only the words the screen needs. For example, there's no "Focus session" label above the timer.
+The timer sits alone in the middle with plenty of empty space around it, like the one fern on a field-guide page. Below it, divided off by a single thin line, is the forest: trees in rows along the ground, like treelines. When a row is full, the next tree starts a new row underneath. Use only the words the screen needs. For example, there's no "Focus session" label above the timer.
 
 ## Elevation and depth
 
@@ -97,7 +97,7 @@ Corners are nearly square: 2px on buttons and frames, and 0 everywhere else.
 
 ## Icons
 
-Small, flat, filled icons in the text color, like a solid pine for the app's mark and a solid triangle for Start. They have no outlines and no color of their own.
+Small, flat icons from Lucide, drawn filled (solid), like a solid pine for the app's mark and a solid triangle for Start. They have no outlines and no color of their own: they take the text color, or stone (on-primary) on a moss-green button.
 
 ## Motion
 
@@ -106,7 +106,7 @@ None. Things appear and change without animation: no bounces, pops or pulses.
 ## Components
 
 - **Start:** a solid moss-green block with stone text and a small filled play icon.
-- **Give up:** a quiet underlined text link in the muted color, under Start. It isn't a button.
+- **Give up:** a quiet underlined text link in the muted color, under the timer while a session is running. Start and Give up are never on screen together. It isn't a button.
 - **Forest:** soft moss pines in a row. The tree you just grew gets a small orange dashed ring around it, like stitching on a badge, until you press Start again or leave the page. Otherwise, trees have no ring.
 
 ## Do's and don'ts

@@ -1,111 +1,129 @@
+@import "tailwindcss";
+@import "shadcn/tailwind.css";
+@import "@fontsource/eb-garamond/400.css";
+@import "@fontsource/eb-garamond/500.css";
+
+/*
+  The theme, written from DESIGN.md. DESIGN.md is the one place the look
+  changes: change it there first, then update the values here to match.
+  Never add a color, font, size or corner that isn't in DESIGN.md.
+*/
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  /* DESIGN.md colors */
+  --background: #eeebe8; /* stone */
+  --foreground: #26231f; /* text */
+  --muted-foreground: #6f6a63; /* muted */
+  --line: #cfc9c2;
+  --primary: #2f5d3a; /* moss: only for things you can press */
+  --primary-foreground: #eeebe8; /* on-primary */
+  --accent: #e07a3f; /* badge orange: only on the tree you just grew */
+  --tree: #3d6b47;
+  --tree-edge: #567f5d;
+  --trunk: #5b4632;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  /* shadcn's slots, pointed at the colors above */
+  --card: var(--background);
+  --card-foreground: var(--foreground);
+  --popover: var(--background);
+  --popover-foreground: var(--foreground);
+  --secondary: var(--background);
+  --secondary-foreground: var(--foreground);
+  --muted: var(--line); /* quiet hover fill for ghost and outline parts */
+  --accent-foreground: var(--foreground);
+  --destructive: var(--foreground); /* no red in DESIGN.md */
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--primary);
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --radius: 2px;
+}
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
+@theme {
+  /* Only these colors exist: no stray Tailwind blues or purples */
+  --color-*: initial;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-line: var(--line);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-tree: var(--tree);
+  --color-tree-edge: var(--tree-edge);
+  --color-trunk: var(--trunk);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Corners: 2px on buttons and frames, 0 everywhere else */
+  --radius-xs: var(--radius);
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
+  --radius-lg: var(--radius);
+  --radius-xl: var(--radius);
+  --radius-2xl: var(--radius);
+  --radius-3xl: var(--radius);
+  --radius-4xl: var(--radius);
+}
+
+@theme {
+  /* One font family everywhere */
+  --font-sans: "EB Garamond", Georgia, serif;
+  --font-heading: "EB Garamond", Georgia, serif;
+
+  --text-timer: 90px;
+  --text-timer--line-height: 1;
+  --text-timer--letter-spacing: -0.02em;
+  --text-timer--font-weight: 400;
+  --text-heading: 16px;
+  --text-heading--font-weight: 500;
+  --text-body: 16px;
+  --text-body--line-height: 1.5;
+  --text-button: 18px;
+  --text-button--font-weight: 500;
+  --text-small: 14px;
+
+  --spacing-screen: 26px;
+  --spacing-gap: 14px;
+  --spacing-tree-gap: 6px;
+
+  /* Flat: no shadows */
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
   }
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+  html {
+    @apply font-sans text-body;
   }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
+  body {
+    @apply bg-background text-foreground;
+    margin: 0;
   }
-}
-
-body {
-  margin: 0;
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
+  /* No motion: things appear and change without animation */
+  *,
+  ::before,
+  ::after {
+    transition: none !important;
+    animation: none !important;
   }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
-}
-
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
 }
