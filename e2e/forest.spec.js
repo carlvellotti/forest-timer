@@ -4,8 +4,19 @@ const nine = new Date('2026-10-01T09:00:00')
 const minutes = (n) => n * 60 * 1000
 
 async function openAtNine(page, path = '/') {
+  // The test clock hides the browser's record of how the page was opened (a reload or not),
+  // so pass the real one through to it. The clock covers every tab in the test, so these do too:
+  // the first script runs before the clock is installed and the second after, so keep them in
+  // this order. Other kinds of timing entries come back empty.
+  await page.context().addInitScript(() => {
+    window.realNavigationEntries = performance.getEntriesByType('navigation')
+  })
   // Time only moves when a check moves it.
   await page.clock.install({ time: nine.getTime() - minutes(1) })
+  await page.context().addInitScript(() => {
+    const entries = window.realNavigationEntries
+    performance.getEntriesByType = (type) => (type === 'navigation' ? entries : [])
+  })
   await page.clock.pauseAt(nine)
   await page.goto(path)
 }
@@ -425,6 +436,90 @@ test('a locked phone (page frozen past 9:25) chimes when you come back, at the s
   const comeBack = new Date('2026-10-01T09:40:00').getTime()
   expect(await chimes(page)).toEqual([comeBack])
   expect(await page.evaluate(() => window.treeGrewAt)).toBe(comeBack)
+})
+
+test('rule 4: start at 9:00, reload at 9:10, and the timer shows 15:00', async ({ page }) => {
+  await openAtNine(page)
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(minutes(10))
+  await page.reload()
+  await expect(page.getByRole('timer')).toHaveText('15:00')
+  await expect(page.getByText('Give up')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Start' })).toHaveCount(0)
+  await expect(page).toHaveTitle('15:00 · Forest Timer')
+  // It carries on as if you never left, and still finishes at 9:25
+  await page.clock.runFor(minutes(15))
+  await expect(page.getByRole('img', { name: 'Tree you just grew' })).toBeVisible()
+  expect(await sessionRecords(page)).toEqual([
+    { startedAt: nine.getTime(), endedAt: nine.getTime() + minutes(25), ended: 'finished' },
+  ])
+})
+
+test('rule 5: start at 9:00, reload at 9:40: you get the tree, with its ring, and no chime', async ({ page }) => {
+  await listenForChimes(page)
+  await openAtNine(page)
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(minutes(10))
+  // The phone sits locked until 9:40, then the browser reloads the tab. A frozen page runs
+  // nothing before that reload, so it mustn't notice being hidden on the way out.
+  await page.evaluate(() =>
+    document.addEventListener('visibilitychange', (event) => event.stopImmediatePropagation(), true),
+  )
+  await page.clock.setSystemTime(new Date('2026-10-01T09:40:00'))
+  await page.reload()
+  await expect(page.getByRole('img', { name: 'Tree you just grew' })).toBeVisible()
+  await expect(page.getByRole('timer')).toHaveText('25:00')
+  await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()
+  await page.clock.runFor(minutes(1))
+  // After a reload no sound has been switched on yet, so this mostly guards against that changing
+  expect(await chimes(page)).toEqual([])
+  expect(await sessionRecords(page)).toEqual([
+    { startedAt: nine.getTime(), endedAt: nine.getTime() + minutes(25), ended: 'finished' },
+  ])
+  // Another reload: the same one tree, now without its ring
+  await page.reload()
+  await expect(page.getByRole('img', { name: 'Tree', exact: true })).toHaveCount(1)
+})
+
+test('fast mode carries on across a reload', async ({ page }) => {
+  await openAtNine(page, '/?fast')
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(10_000)
+  await page.reload()
+  await expect(page.getByRole('timer')).toHaveText('0:15')
+})
+
+test('opening fresh mid-session doesn\'t carry on, and a later reload doesn\'t bring it back', async ({ page, context }) => {
+  await openAtNine(page)
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(minutes(10))
+  // Close the tab at 9:10, then open the app again in a new one (the test clock carries on)
+  await page.close()
+  const reopened = await context.newPage()
+  await reopened.goto('/')
+  await expect(reopened.getByRole('timer')).toHaveText('25:00')
+  await expect(reopened.getByRole('button', { name: 'Start' })).toBeVisible()
+  await reopened.reload()
+  await expect(reopened.getByRole('timer')).toHaveText('25:00')
+  await expect(reopened.getByRole('button', { name: 'Start' })).toBeVisible()
+  await expect(reopened.getByRole('img', { name: /tree/i })).toHaveCount(0)
+})
+
+test('a reload after a session ended opens on ready', async ({ page }) => {
+  await openAtNine(page)
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(minutes(5))
+  await page.getByRole('button', { name: 'Give up' }).click()
+  await page.getByRole('button', { name: 'Give up' }).click()
+  await page.reload()
+  await expect(page.getByRole('timer')).toHaveText('25:00')
+  await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(minutes(25))
+  await page.reload()
+  await expect(page.getByRole('timer')).toHaveText('25:00')
+  await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()
+  expect((await sessionRecords(page)).map((record) => record.ended)).toEqual(['gave up', 'finished'])
 })
 
 test('nothing runs off the side of the screen', async ({ page }) => {

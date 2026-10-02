@@ -4,12 +4,14 @@ import { Button } from '@/components/ui/button'
 import { loadSessionRecords, treesFrom } from './browser-storage'
 import Forest from './Forest'
 import { formatTimeLeft, tabTitle } from './session-keeper'
-import { useSessionKeeper } from './use-session-keeper'
+import { sessionFinishedOnOpening, useSessionKeeper } from './use-session-keeper'
 
 function App() {
-  const [records, setRecords] = useState(loadSessionRecords)
   // The tree you just grew keeps its ring until you press Start again or leave the page.
-  const [justGrew, setJustGrew] = useState(null)
+  // That includes a session that finished while the page was away (rule 5), which is
+  // settled first, so the forest loaded below already has its tree.
+  const [justGrew, setJustGrew] = useState(sessionFinishedOnOpening)
+  const [records, setRecords] = useState(loadSessionRecords)
   // Rule 3: Give up asks once, in place, before it ends the session.
   const [askingToGiveUp, setAskingToGiveUp] = useState(false)
 

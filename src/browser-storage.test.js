@@ -1,5 +1,12 @@
 import { beforeEach, expect, test, vi } from 'vitest'
-import { loadSessionRecords, saveSessionRecord, treesFrom } from './browser-storage'
+import {
+  clearRunningSession,
+  loadRunningSession,
+  loadSessionRecords,
+  saveRunningSession,
+  saveSessionRecord,
+  treesFrom,
+} from './browser-storage'
 
 beforeEach(() => localStorage.clear())
 
@@ -69,4 +76,18 @@ test('blocked storage shows an empty forest instead of breaking', () => {
 
 test('newest first goes by start time, even if records were saved out of order', () => {
   expect(treesFrom([finishedAt(10), finishedAt(8), finishedAt(9)])).toEqual([finishedAt(10), finishedAt(9), finishedAt(8)])
+})
+
+test('the running session\'s start time is saved, and cleared when it ends', () => {
+  const nine = Date.parse('2026-10-01T09:00:00Z')
+  expect(loadRunningSession()).toBeNull()
+  saveRunningSession(nine)
+  expect(loadRunningSession()).toBe(nine)
+  clearRunningSession()
+  expect(loadRunningSession()).toBeNull()
+})
+
+test('an unreadable running-session time counts as no session running', () => {
+  localStorage.setItem('forest-timer:running-session', 'not a time')
+  expect(loadRunningSession()).toBeNull()
 })

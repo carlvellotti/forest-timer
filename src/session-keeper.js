@@ -12,8 +12,9 @@ export function sessionLength({ dev, search }) {
 }
 
 // Rule 9: the clock always counts from when Start was pressed, so sleep doesn't stop it.
+// It never shows more than a whole session, even if the clock was moved back after Start.
 export function timeLeft(startedAt, now, length) {
-  return Math.max(0, startedAt + length - now)
+  return Math.min(length, Math.max(0, startedAt + length - now))
 }
 
 // Minutes and seconds, never hours: 25:00, 24:59 … 0:59 … 0:01, 0:00.
@@ -38,6 +39,18 @@ export function givenUpRecord(startedAt, endedAt) {
     endedAt: new Date(endedAt).toISOString(),
     ended: 'gave up',
   }
+}
+
+// A session was running when the page opened (docs/adr/0001):
+// a reload before the 25 minutes are up carries on; a reload after counts as finished.
+// Opening fresh after a close or a crash is handled separately.
+// A start time in the future (the clock was moved back) can't be a real session.
+export function sessionOnOpening({ startedAt, reloaded, now, length }) {
+  if (startedAt === null) return null
+  if (startedAt > now) return { kind: 'not possible', startedAt }
+  if (!reloaded) return { kind: 'opened fresh', startedAt }
+  if (timeLeft(startedAt, now, length) > 0) return { kind: 'carries on', startedAt }
+  return { kind: 'finished', record: finishedRecord(startedAt, length) }
 }
 
 export function tabTitle(running, ms) {

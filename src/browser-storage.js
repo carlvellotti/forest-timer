@@ -46,3 +46,27 @@ export function treesFrom(records) {
     .filter((record) => record.ended === 'finished')
     .toSorted((a, b) => b.startedAt.localeCompare(a.startedAt))
 }
+
+// While a session runs, the moment Start was pressed is saved too, so a reload can pick it back up.
+const RUNNING_SESSION_KEY = 'forest-timer:running-session'
+
+export function saveRunningSession(startedAt) {
+  localStorage.setItem(RUNNING_SESSION_KEY, new Date(startedAt).toISOString())
+}
+
+export function loadRunningSession() {
+  try {
+    const startedAt = Date.parse(localStorage.getItem(RUNNING_SESSION_KEY))
+    return Number.isFinite(startedAt) ? startedAt : null
+  } catch {
+    return null
+  }
+}
+
+export function clearRunningSession() {
+  try {
+    localStorage.removeItem(RUNNING_SESSION_KEY)
+  } catch {
+    // Storage blocked: nothing was saved to clear
+  }
+}
