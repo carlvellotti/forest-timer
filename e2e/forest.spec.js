@@ -33,6 +33,44 @@ test('ready: the timer reads 25:00 with Start under it, no Give up, plain tab ti
   expect(start.y).toBeGreaterThan(timer.y + timer.height)
 })
 
+// The thin line over the forest: the top edge of the forest's section
+const forestLineTop = (page) =>
+  page.evaluate(() => document.querySelectorAll('main > section')[1].getBoundingClientRect().top)
+
+test('the forest is right there under the timer: the line sits just under the buttons, above the middle of the screen', async ({ page }) => {
+  await openAtNine(page)
+  const timer = await page.getByRole('timer').boundingBox()
+  const start = await page.getByRole('button', { name: 'Start' }).boundingBox()
+  const line = await forestLineTop(page)
+  const height = await page.evaluate(() => window.innerHeight)
+  expect(line).toBeGreaterThan(start.y + start.height)
+  // The timer sits about a third of the way down, and the line comes before the bottom half's end
+  expect(timer.y).toBeCloseTo(height * 0.3, 0)
+  expect(line).toBeLessThan(height * 0.6)
+  // The first-visit line is just under it, not at the bottom of the page
+  const firstVisit = await page.getByText('Finish a session to grow your first tree.').boundingBox()
+  expect(firstVisit.y).toBeLessThan(height * 0.65)
+})
+
+test('the line never moves: ready, running and asking to give up all keep it in the same spot', async ({ page }) => {
+  await openAtNine(page)
+  const ready = await forestLineTop(page)
+  await page.getByRole('button', { name: 'Start' }).click()
+  expect(await forestLineTop(page)).toBe(ready)
+  await page.getByRole('button', { name: 'Give up' }).click()
+  await expect(page.getByText(question)).toBeVisible()
+  expect(await forestLineTop(page)).toBe(ready)
+})
+
+test('the timer stays put however big the forest grows', async ({ page }) => {
+  await openAtNine(page)
+  const empty = await page.getByRole('timer').boundingBox()
+  await page.evaluate(() => localStorage.clear())
+  await openWithTrees(page, 100)
+  await expect(page.getByRole('img', { name: /tree/i })).toHaveCount(100)
+  expect(await page.getByRole('timer').boundingBox()).toEqual(empty)
+})
+
 test('Start is the one word, with no icon', async ({ page }) => {
   await openAtNine(page)
   const start = page.getByRole('button', { name: 'Start' })

@@ -36,6 +36,7 @@ rounded:
   sm: 2px
 spacing:
   screen-padding: 26px
+  timer-top: 30svh
   gap: 14px
   tree-gap: 10px
   tree: 40px
@@ -86,7 +87,7 @@ One font family everywhere: EB Garamond, an old-book serif. The timer is the big
 
 ## Layout
 
-The timer sits alone in the middle with plenty of empty space around it, like the one fern on a field-guide page. Below it, divided off by a single thin line, is the forest: trees in rows along the ground, like treelines, each row centered under the timer. The forest is the reward, so the trees are big enough to matter. When a row is full, the next tree starts a new row underneath. Use only the words the screen needs. For example, there's no "Focus session" label above the timer.
+The timer sits alone near the top, about a third of the way down the screen (timer-top), with plenty of empty space around it, like the one fern on a field-guide page. It stays in that spot whatever happens below it. Right under its buttons, one gap below, a single thin line divides off the forest, so the forest is right there under the timer, never pushed to the bottom of the page. The line doesn't move when Give up asks its question: the space under the timer is always tall enough for the question. Below the line is the forest: trees in rows along the ground, like treelines, each row centered under the timer. The forest is the reward, so the trees are big enough to matter. When a row is full, the next tree starts a new row underneath. Use only the words the screen needs. For example, there's no "Focus session" label above the timer.
 
 ## Elevation and depth
 

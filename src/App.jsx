@@ -35,34 +35,41 @@ function App() {
   }
 
   return (
-    <main className="flex min-h-svh flex-col">
-      {/* The timer stays centered; what's under it hangs below, so asking never moves it */}
-      <section className="grid flex-1 grid-rows-[1fr_auto_1fr] justify-items-center p-screen">
-        <p className="row-start-2 text-timer tabular-nums" role="timer">
+    <main className="min-h-svh">
+      {/* The timer sits a third of the way down and stays put; the forest starts right under its buttons */}
+      <section className="flex flex-col items-center px-screen pt-timer-top pb-gap">
+        <p className="text-timer tabular-nums" role="timer">
           {formatTimeLeft(timeLeft)}
         </p>
-        <div className="row-start-3 flex flex-col items-center gap-gap pt-gap">
-          {!running ? (
-            <Button onClick={startSession}>Start</Button>
-          ) : askingToGiveUp ? (
-            <>
-              <p className="text-muted-foreground" role="status">
-                Give up? No tree this time.
-              </p>
-              <div className="flex items-center gap-gap">
-                <Button autoFocus onClick={() => setAskingToGiveUp(false)}>
-                  Keep going
-                </Button>
-                <Button variant="link" onClick={giveUp}>
-                  Give up
-                </Button>
-              </div>
-            </>
-          ) : (
-            <Button variant="link" onClick={() => setAskingToGiveUp(true)}>
-              Give up
-            </Button>
-          )}
+        {/* Always as tall as the question, so asking never moves the line or the forest */}
+        <div className="grid pt-gap *:col-start-1 *:row-start-1">
+          <div className="invisible flex flex-col items-center gap-gap" aria-hidden="true" inert>
+            <p>&nbsp;</p>
+            <Button tabIndex={-1}>&nbsp;</Button>
+          </div>
+          <div className="flex flex-col items-center gap-gap">
+            {!running ? (
+              <Button onClick={startSession}>Start</Button>
+            ) : askingToGiveUp ? (
+              <>
+                <p className="text-muted-foreground" role="status">
+                  Give up? No tree this time.
+                </p>
+                <div className="flex items-center gap-gap">
+                  <Button autoFocus onClick={() => setAskingToGiveUp(false)}>
+                    Keep going
+                  </Button>
+                  <Button variant="link" onClick={giveUp}>
+                    Give up
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <Button variant="link" onClick={() => setAskingToGiveUp(true)}>
+                Give up
+              </Button>
+            )}
+          </div>
         </div>
       </section>
       <section className="border-t border-line p-screen">
