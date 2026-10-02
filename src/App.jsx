@@ -52,13 +52,22 @@ function App() {
     document.title = tabTitle(running, timeLeft)
   }, [running, timeLeft])
 
+  // Mid-session the browser's Back button could reach /stats without loading the page.
+  // Like the Stats link, it can't pull you away: you stay on the timer, at / (Q11).
+  useEffect(() => {
+    if (running && statsPage) {
+      window.history.replaceState(null, '', '/' + window.location.search)
+      window.dispatchEvent(new PopStateEvent('popstate'))
+    }
+  }, [running, statsPage])
+
   function startSession() {
     setJustGrew(null)
     setAskingToGiveUp(false)
     start()
   }
 
-  if (statsPage) {
+  if (statsPage && !running) {
     return (
       <main className="relative min-h-svh">
         <Stats records={records} onBack={goTo('/')} />

@@ -233,3 +233,61 @@ test('rule 4, page open: Thursday 11:59pm with nothing on Thursday, and at midni
   await page.clock.runFor(minutes(2))
   await expect(page.getByText('No streak yet. Finish a session to start one.')).toBeVisible()
 })
+
+// Typing /stats mid-session (slice 3, rule 7 as changed 2026-10-02)
+test('rule 7: start at 9:00, type /stats at 9:10: given up, ended about 9:10, and not counted', async ({ page }) => {
+  // The test clock hides how the page was opened, so pass the browser's real record through (as in forest.spec.js)
+  await page.context().addInitScript(() => {
+    window.realNavigationEntries = performance.getEntriesByType('navigation')
+  })
+  await page.clock.install({ time: thursdayAtNine.getTime() - minutes(1) })
+  await page.context().addInitScript(() => {
+    const entries = window.realNavigationEntries
+    performance.getEntriesByType = (type) => (type === 'navigation' ? entries : [])
+  })
+  await page.clock.pauseAt(thursdayAtNine)
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(minutes(10))
+
+  await page.goto('/stats')
+  // Typing an address opens the page fresh: it isn't a reload
+  expect(await page.evaluate(() => performance.getEntriesByType('navigation')[0]?.type)).toBe('navigate')
+  await expect(page.getByText('0 sessions this week')).toBeVisible()
+  await expect(page.getByText('No streak yet. Finish a session to start one.')).toBeVisible()
+  await expect(page).toHaveTitle('Forest Timer')
+  const records = await page.evaluate(() => JSON.parse(localStorage.getItem('forest-timer:session-records')))
+  expect(records).toHaveLength(1)
+  expect(records[0].ended).toBe('gave up')
+  expect(Date.parse(records[0].endedAt) - thursdayAtNine.getTime()).toBeGreaterThanOrEqual(minutes(10) - 1000)
+  expect(Date.parse(records[0].endedAt) - thursdayAtNine.getTime()).toBeLessThanOrEqual(minutes(10))
+
+  await page.getByRole('link', { name: 'Back to forest' }).click()
+  await expect(page.getByRole('timer')).toHaveText('25:00')
+  await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Stats' })).toBeVisible()
+  await expect(page.getByRole('img', { name: /tree/i })).toHaveCount(0)
+})
+
+test('the tab title on /stats reads "Forest Timer"', async ({ page }) => {
+  await openAt(page, thursdayAtNine, '/stats')
+  await expect(page).toHaveTitle('Forest Timer')
+})
+
+test('mid-session, the browser Back button to /stats keeps you on the timer, at /', async ({ page }) => {
+  await openAt(page, thursdayAtNine)
+  await page.getByRole('link', { name: 'Stats' }).click()
+  await page.getByRole('link', { name: 'Back to forest' }).click()
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(minutes(5))
+  await page.goBack()
+  await expect(page).toHaveURL(/\/$/)
+  await expect(page.getByText(/this week/)).toHaveCount(0)
+  await page.clock.runFor(1000)
+  await expect(page.getByRole('timer')).toHaveText('19:59')
+  await expect(page).toHaveTitle('19:59 · Forest Timer')
+  // Once the session ends, Stats works as usual
+  await page.clock.runFor(minutes(20))
+  await page.getByRole('link', { name: 'Stats' }).click()
+  await expect(page.getByText('1 session this week')).toBeVisible()
+})
