@@ -14,5 +14,8 @@ The words this app uses, and what each one means. Use these words in code, scree
 - **First-visit line:** "Finish a session to grow your first tree." It's the forest's only content before the first tree, and it disappears once there is one.
 - **Tree:** what a finished session grows. One finished session means one tree. The tree you just grew has the orange dashed ring until you press Start again or leave the page.
 - **Another tab:** Forest Timer runs in one tab at a time. Any other tab shows only "Forest Timer is open in another tab." Opening or closing another tab never gives up a session.
-- **Ready:** the screen when no session is running. The timer reads 25:00, with Start under it and no Give up link.
+- **Ready:** the screen when no session is running. The timer reads 25:00, with Start under it and no Give up link. The quiet "Stats" link sits at the top-right.
 - **Running:** the screen during a session. The timer counts down, Start is gone, and only the quiet Give up link sits under it.
+- **Stats page:** the page at /stats that shows your streak and this week. You reach it from the quiet "Stats" link at the top-right, which only shows when Ready, and leave it with "Back to forest". It only reads session records; it saves nothing.
+- **This week:** Monday to Sunday, in your own time zone. Shown as each day's count of finished sessions plus the week's total. A session counts on the day it finished.
+- **Streak:** how many days in a row, up to today, you finished at least one session. Today doesn't break it until it's over: finished Monday to Wednesday, it's still 3 on Thursday morning, 4 once you finish one Thursday, and 0 on Friday if Thursday had none. Given-up sessions don't count.
