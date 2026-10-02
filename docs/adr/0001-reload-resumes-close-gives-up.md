@@ -47,3 +47,13 @@ Trade-offs accepted:
 - In a background tab, Chrome slows the once-a-second note to about once a minute after 5 minutes, so a crash there can be recorded up to about a minute early. A plain close still notes the exact moment.
 - A session with no last-seen moment (started before this change, or storage failed) is recorded as ending at Start.
 - A close is always a give-up, even if the page was last seen at the very end: an awake page finishes the session itself before that can happen.
+
+## Addendum: which tab a reload belongs to (2026-10-02)
+
+Rule 4 is "a reload of the tab the session started in". The tab that presses Start keeps its own note of the session, which survives a reload of that tab but not a close. A reload only carries a session on in the tab holding that note. So after tab one closes, reloading the second tab opens on ready, with the session given up (rule 8). A duplicated tab gets a copy of the note, and forgets it when it first opens.
+
+Only one tab runs the app, through the browser's Web Locks. Consequences:
+- After a reload, the old page may not have let go yet, so the new page keeps trying for about a second before showing "open in another tab".
+- A page holding a lock can't be kept in the browser's back/forward memory. Leaving mid-session and pressing Back loads the app fresh, so it's a give-up (rule 6).
+- A phone that puts the session's tab away to save memory lets go of the lock. Opening the app in a new tab then runs it and records a give-up, as with a close.
+- Web Locks only work on https pages and localhost. On a phone testing the dev server over Wi-Fi (plain http), every tab runs the app. The hosted https site isn't affected.

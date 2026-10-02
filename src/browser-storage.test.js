@@ -1,14 +1,19 @@
 import { beforeEach, expect, test, vi } from 'vitest'
 import {
   clearRunningSession,
+  forgetThisTabSession,
   loadRunningSession,
+  loadThisTabSession,
   loadSessionRecords,
   saveRunningSession,
   saveSessionRecord,
   treesFrom,
 } from './browser-storage'
 
-beforeEach(() => localStorage.clear())
+beforeEach(() => {
+  localStorage.clear()
+  sessionStorage.clear()
+})
 
 const finishedAt = (hour) => ({
   startedAt: `2026-10-01T${String(hour).padStart(2, '0')}:00:00.000Z`,
@@ -90,4 +95,17 @@ test('the running session\'s start time is saved, and cleared when it ends', () 
 test('an unreadable running-session time counts as no session running', () => {
   localStorage.setItem('forest-timer:running-session', 'not a time')
   expect(loadRunningSession()).toBeNull()
+})
+
+test("this tab's note of its session is saved with it, and cleared or forgotten", () => {
+  const nine = Date.parse('2026-10-01T09:00:00Z')
+  expect(loadThisTabSession()).toBeNull()
+  saveRunningSession(nine)
+  expect(loadThisTabSession()).toBe(nine)
+  clearRunningSession()
+  expect(loadThisTabSession()).toBeNull()
+  saveRunningSession(nine)
+  forgetThisTabSession()
+  expect(loadThisTabSession()).toBeNull()
+  expect(loadRunningSession()).toBe(nine)
 })

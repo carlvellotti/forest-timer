@@ -52,8 +52,31 @@ const RUNNING_SESSION_KEY = 'forest-timer:running-session'
 // And the last moment the page was seen open, so a close or a crash knows when the session ended.
 const LAST_SEEN_KEY = 'forest-timer:running-session-last-seen'
 
+// This tab's own note of the session it started. It survives a reload of this tab, but not a
+// close, and other tabs can't see it (a duplicated tab gets a copy, which it forgets on opening),
+// so only the tab that started a session can carry it on.
+const THIS_TAB_SESSION_KEY = 'forest-timer:this-tab-session'
+
 export function saveRunningSession(startedAt) {
   localStorage.setItem(RUNNING_SESSION_KEY, new Date(startedAt).toISOString())
+  sessionStorage.setItem(THIS_TAB_SESSION_KEY, new Date(startedAt).toISOString())
+}
+
+export function forgetThisTabSession() {
+  try {
+    sessionStorage.removeItem(THIS_TAB_SESSION_KEY)
+  } catch {
+    // Storage blocked: nothing was saved to forget
+  }
+}
+
+export function loadThisTabSession() {
+  try {
+    const startedAt = Date.parse(sessionStorage.getItem(THIS_TAB_SESSION_KEY))
+    return Number.isFinite(startedAt) ? startedAt : null
+  } catch {
+    return null
+  }
 }
 
 export function loadRunningSession() {
@@ -82,6 +105,7 @@ export function clearRunningSession() {
   try {
     localStorage.removeItem(RUNNING_SESSION_KEY)
     localStorage.removeItem(LAST_SEEN_KEY)
+    sessionStorage.removeItem(THIS_TAB_SESSION_KEY)
   } catch {
     // Storage blocked: nothing was saved to clear
   }

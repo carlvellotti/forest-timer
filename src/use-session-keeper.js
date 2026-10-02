@@ -3,32 +3,31 @@ import {
   clearRunningSession,
   loadLastSeen,
   loadRunningSession,
+  loadThisTabSession,
   saveLastSeen,
   saveRunningSession,
   saveSessionRecord,
 } from './browser-storage'
 import { playChime, unlockChime } from './chime'
+import { loadedAsReload } from './tab-check'
 import { finishedRecord, givenUpRecord, sessionLength, sessionOnOpening, timeLeft } from './session-keeper'
 
 const length = sessionLength({ dev: import.meta.env.DEV, search: window.location.search })
 
-// A reload by you, or by the browser bringing back a tab it put away to save memory.
-function wasReloaded() {
-  try {
-    return performance.getEntriesByType('navigation')[0]?.type === 'reload' || document.wasDiscarded === true
-  } catch {
-    return false
-  }
+// Rule 4 means a reload of the tab the session started in, so this tab must have started it.
+function wasReloaded(startedAt) {
+  return startedAt !== null && loadThisTabSession() === startedAt && loadedAsReload()
 }
 
 // Worked out once per page load: was a session running when the page opened, and what happens to it?
 let opening
 function openingSession() {
   if (opening === undefined) {
+    const startedAt = loadRunningSession()
     opening = sessionOnOpening({
-      startedAt: loadRunningSession(),
+      startedAt,
       lastSeenAt: loadLastSeen(),
-      reloaded: wasReloaded(),
+      reloaded: wasReloaded(startedAt),
       now: Date.now(),
       length,
     })
@@ -80,8 +79,10 @@ function switchSoundOnWithAnyPress() {
   for (const event of events) document.addEventListener(event, switchOn, true)
 }
 
-// Settled as soon as the app loads, before the first press can happen.
-openingSession()
+// Settled once this tab has claimed the app, before it draws or a press can happen.
+export function settleOpeningSession() {
+  openingSession()
+}
 
 // The session that finished while the page was away, if any, so its tree can wear the ring.
 export function sessionFinishedOnOpening() {

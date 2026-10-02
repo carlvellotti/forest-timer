@@ -331,6 +331,7 @@ test('40 trees wrap into rows: roughly a dozen per row on a phone, a few dozen o
 
 test('100 trees: on a laptop too, a full row wraps and the next tree starts a new row underneath', async ({ page }, testInfo) => {
   await openWithTrees(page, 100)
+  await expect(page.getByRole('img', { name: /tree/i })).toHaveCount(100)
   const tops = await page
     .getByRole('img', { name: /tree/i })
     .evaluateAll((all) => all.map((tree) => Math.round(tree.getBoundingClientRect().top)))
@@ -623,8 +624,114 @@ test('a reload after a session ended opens on ready', async ({ page }) => {
   expect((await sessionRecords(page)).map((record) => record.ended)).toEqual(['gave up', 'finished'])
 })
 
+const anotherTab = 'Forest Timer is open in another tab.'
+
+async function openSecondTab(context, time) {
+  const second = await context.newPage()
+  await second.clock.setSystemTime(time)
+  await second.goto('/')
+  return second
+}
+
+test('rule 8: start in tab one at 9:00, open tab two at 9:05: tab two shows only the line, tab one keeps counting', async ({ page, context }) => {
+  await openAtNine(page)
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(minutes(5))
+  const second = await openSecondTab(context, new Date('2026-10-01T09:05:00'))
+  const line = second.getByText(anotherTab)
+  await expect(line).toBeVisible()
+  await expect(line).toHaveCSS('color', 'rgb(111, 106, 99)')
+  await expect(second.getByRole('timer')).toHaveCount(0)
+  await expect(second.getByRole('button')).toHaveCount(0)
+  await expect(second.getByRole('list', { name: 'Forest' })).toHaveCount(0)
+
+  await page.clock.runFor(1000)
+  await expect(page.getByRole('timer')).toHaveText('19:59')
+  // Opening tab two recorded nothing and cleared nothing
+  const saved = await page.evaluate(() => [
+    localStorage.getItem('forest-timer:session-records'),
+    localStorage.getItem('forest-timer:running-session'),
+  ])
+  expect(saved[0]).toBeNull()
+  expect(Date.parse(saved[1])).toBe(nine.getTime())
+})
+
+test('rule 8: close tab two, and nothing changes in tab one', async ({ page, context }) => {
+  await openAtNine(page)
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(minutes(5))
+  const second = await openSecondTab(context, new Date('2026-10-01T09:05:00'))
+  await expect(second.getByText(anotherTab)).toBeVisible()
+  await second.close()
+  await page.clock.runFor(minutes(20))
+  await expect(page.getByRole('img', { name: 'Tree you just grew' })).toBeVisible()
+  expect(await sessionRecords(page)).toEqual([
+    { startedAt: nine.getTime(), endedAt: nine.getTime() + minutes(25), ended: 'finished' },
+  ])
+})
+
+test('rule 8: close tab one at 9:10: a give-up; tab two keeps the line until reloaded, then opens on ready with no tree', async ({ page, context }) => {
+  await openAtNine(page)
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(minutes(5))
+  const second = await openSecondTab(context, new Date('2026-10-01T09:05:00'))
+  await expect(second.getByText(anotherTab)).toBeVisible()
+  await page.clock.runFor(minutes(5))
+  await page.close()
+
+  await second.clock.runFor(minutes(1))
+  await expect(second.getByText(anotherTab)).toBeVisible()
+  await expect(second.getByRole('timer')).toHaveCount(0)
+
+  await second.reload()
+  await expect(second.getByRole('timer')).toHaveText('25:00')
+  await expect(second.getByRole('button', { name: 'Start' })).toBeVisible()
+  await expect(second.getByRole('img', { name: /tree/i })).toHaveCount(0)
+  const records = await sessionRecords(second)
+  expect(records).toHaveLength(1)
+  expect(records[0].ended).toBe('gave up')
+  expect(aboutNineTen(records[0].endedAt)).toBeLessThanOrEqual(3000)
+})
+
+test('a duplicated tab doesn\'t become the session\'s tab: close tab one at 9:10, reload the copy, and it\'s a give-up', async ({ page, context }) => {
+  await openAtNine(page)
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(minutes(5))
+  // Duplicating a tab copies its own storage, including tab one's note of the session it started
+  const note = await page.evaluate(() => sessionStorage.getItem('forest-timer:this-tab-session'))
+  const copy = await context.newPage()
+  await copy.addInitScript((note) => {
+    if (sessionStorage.getItem('copied-on-duplicate') === null) {
+      sessionStorage.setItem('copied-on-duplicate', 'yes')
+      sessionStorage.setItem('forest-timer:this-tab-session', note)
+    }
+  }, note)
+  await copy.goto('/')
+  await expect(copy.getByText(anotherTab)).toBeVisible()
+  await page.clock.runFor(minutes(5))
+  await page.close()
+
+  await copy.reload()
+  await expect(copy.getByRole('timer')).toHaveText('25:00')
+  await expect(copy.getByRole('button', { name: 'Start' })).toBeVisible()
+  const records = await sessionRecords(copy)
+  expect(records).toHaveLength(1)
+  expect(records[0].ended).toBe('gave up')
+})
+
+test('rule 4 still holds with the tab check: reloading tab one carries on, and only it runs the app', async ({ page, context }) => {
+  await openAtNine(page)
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(minutes(10))
+  await page.reload()
+  await expect(page.getByRole('timer')).toHaveText('15:00')
+  const second = await openSecondTab(context, new Date('2026-10-01T09:10:00'))
+  await expect(second.getByText(anotherTab)).toBeVisible()
+})
+
 test('nothing runs off the side of the screen', async ({ page }) => {
   await page.goto('/')
+  await expect(page.getByRole('timer')).toBeVisible()
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
   expect(overflow).toBe(0)
 })
