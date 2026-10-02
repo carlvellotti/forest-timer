@@ -10,6 +10,8 @@ The words this app uses, and what each one means. Use these words in code, scree
 - **Session record:** what's saved in this browser for every session, finished or given up: when it started, when it ended, and how it ended (finished or gave up). For a close or a crash, "ended" is the last moment the page was open, to within a few seconds. Length comes from the start and end times.
 - **Chime:** the one soft note that plays when a session finishes. Giving up plays nothing.
 - **Forest:** every tree you've ever grown, all time. It never resets. Trees sit in centered rows like treelines, and when a row is full, the next tree starts a new row underneath. The newest tree comes first (the first spot in the top row, right under the line), and older trees move along one spot each time.
+- **Line:** the single thin line between the timer and the forest. The forest starts right under it. It never moves: not when asking to give up, and not as the forest grows.
+- **First-visit line:** "Finish a session to grow your first tree." It's the forest's only content before the first tree, and it disappears once there is one.
 - **Tree:** what a finished session grows. One finished session means one tree. The tree you just grew has the orange dashed ring until you press Start again or leave the page.
 - **Another tab:** Forest Timer runs in one tab at a time. Any other tab shows only "Forest Timer is open in another tab." Opening or closing another tab never gives up a session.
 - **Ready:** the screen when no session is running. The timer reads 25:00, with Start under it and no Give up link.
