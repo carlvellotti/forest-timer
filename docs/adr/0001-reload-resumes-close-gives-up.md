@@ -34,3 +34,7 @@ Trade-off accepted: a reload after 25 minutes grows a tree even if you'd wandere
 ## Addendum: no chime after a reload (2026-10-02)
 
 A late reload grows the tree, with its ring, but plays no chime. After a reload, browsers won't play sound until you press something on the page, and the press that allowed sound before the reload doesn't carry over. The choice was between no chime and a chime on your next tap, which could come much later and feel random. The ring is enough.
+
+## Addendum: a locked phone, then a close (2026-10-02)
+
+Start at 9:00, lock the phone at 9:10, and close the tab at 9:40 without unlocking. Rule 6 (a close is a give-up) and rule 9 (a session that finishes while asleep grows its tree) pull different ways here, and a frozen page can't tell "still locked" from "closed". It counts as a give-up, ended about 9:10, the last moment the page was awake. The alternative, "finished if 25 minutes passed before the app was opened again", would also grow a tree for a close at 9:12 followed by reopening at 10:00.

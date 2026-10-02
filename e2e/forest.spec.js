@@ -481,6 +481,30 @@ test('rule 5: start at 9:00, reload at 9:40: you get the tree, with its ring, an
   await expect(page.getByRole('img', { name: 'Tree', exact: true })).toHaveCount(1)
 })
 
+test('rule 4: after a reload, any press turns the sound back on, so the finish chimes', async ({ page }) => {
+  await listenForChimes(page)
+  await openAtNine(page)
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(minutes(10))
+  await page.reload()
+  await expect(page.getByRole('timer')).toHaveText('15:00')
+  await page.mouse.click(5, 5)
+  await page.clock.runFor(minutes(15))
+  await expect(page.getByRole('img', { name: 'Tree you just grew' })).toBeVisible()
+  expect(await chimes(page)).toEqual([nine.getTime() + minutes(25)])
+})
+
+test('rule 4: after a reload with no press, the session finishes silently with its tree', async ({ page }) => {
+  await listenForChimes(page)
+  await openAtNine(page)
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(minutes(10))
+  await page.reload()
+  await page.clock.runFor(minutes(15))
+  await expect(page.getByRole('img', { name: 'Tree you just grew' })).toBeVisible()
+  expect(await chimes(page)).toEqual([])
+})
+
 test('fast mode carries on across a reload', async ({ page }) => {
   await openAtNine(page, '/?fast')
   await page.getByRole('button', { name: 'Start' }).click()

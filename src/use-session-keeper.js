@@ -34,9 +34,23 @@ function openingSession() {
     // Opened fresh after a close or a crash: the session doesn't carry on, and a later reload
     // mustn't bring it back. (Recording it as a give-up comes with rule 6.)
     if (opening?.kind === 'opened fresh' || opening?.kind === 'not possible') clearRunningSession()
+    // Rule 4: after a reload, sound stays off until you press something, so any press turns it back on.
+    if (opening?.kind === 'carries on') switchSoundOnWithAnyPress()
   }
   return opening
 }
+
+function switchSoundOnWithAnyPress() {
+  const events = ['pointerdown', 'keydown']
+  const switchOn = () => {
+    unlockChime()
+    for (const event of events) document.removeEventListener(event, switchOn, true)
+  }
+  for (const event of events) document.addEventListener(event, switchOn, true)
+}
+
+// Settled as soon as the app loads, before the first press can happen.
+openingSession()
 
 // The session that finished while the page was away, if any, so its tree can wear the ring.
 export function sessionFinishedOnOpening() {
