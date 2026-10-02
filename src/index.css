@@ -100,8 +100,8 @@
 
   --spacing-screen: 26px;
   --spacing-gap: 14px;
-  --spacing-tree-gap: 6px;
-  --spacing-tree: 24px;
+  --spacing-tree-gap: 10px;
+  --spacing-tree: 40px;
 
   /* Flat: no shadows */
   --shadow-*: initial;

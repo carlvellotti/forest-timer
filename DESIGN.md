@@ -37,8 +37,8 @@ rounded:
 spacing:
   screen-padding: 26px
   gap: 14px
-  tree-gap: 6px
-  tree: 24px
+  tree-gap: 10px
+  tree: 40px
 components:
   button-primary:
     background: "{colors.primary}"
@@ -86,7 +86,7 @@ One font family everywhere: EB Garamond, an old-book serif. The timer is the big
 
 ## Layout
 
-The timer sits alone in the middle with plenty of empty space around it, like the one fern on a field-guide page. Below it, divided off by a single thin line, is the forest: trees in rows along the ground, like treelines. When a row is full, the next tree starts a new row underneath. Use only the words the screen needs. For example, there's no "Focus session" label above the timer.
+The timer sits alone in the middle with plenty of empty space around it, like the one fern on a field-guide page. Below it, divided off by a single thin line, is the forest: trees in rows along the ground, like treelines, each row centered under the timer. The forest is the reward, so the trees are big enough to matter. When a row is full, the next tree starts a new row underneath. Use only the words the screen needs. For example, there's no "Focus session" label above the timer.
 
 ## Elevation and depth
 
@@ -108,7 +108,7 @@ None. Things appear and change without animation: no bounces, pops or pulses.
 
 - **Start:** a solid moss-green block with stone text and a small filled play icon.
 - **Give up:** a quiet underlined text link in the muted color, under the timer while a session is running. Start and Give up are never on screen together. It isn't a button.
-- **Forest:** soft moss pines in a row, each in a 24px square (with room inside for the ring), so roughly a dozen fit in a row on a phone and a few dozen on a laptop. The tree you just grew gets a small orange dashed ring around it, like stitching on a badge, until you press Start again or leave the page. Otherwise, trees have no ring.
+- **Forest:** soft moss pines in centered rows, each in a 40px square with 10px between them. The pine fills most of its square, leaving just enough room for the ring. About six fit in a row on a phone and about two dozen on a laptop. The tree you just grew gets a small orange dashed ring around it, like stitching on a badge, until you press Start again or leave the page. Otherwise, trees have no ring.
 
 ## Do's and don'ts
 

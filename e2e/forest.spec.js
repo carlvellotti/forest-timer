@@ -91,7 +91,7 @@ test('first visit: "Finish a session to grow your first tree." in muted grey', a
   await expect(line).toHaveCSS('color', 'rgb(111, 106, 99)')
 })
 
-test('rule 2: at 9:25 one ringed tree sits top-left, the timer reads 25:00, the first-visit line is gone', async ({ page }) => {
+test('rule 2: at 9:25 one ringed tree sits first in the top row, the timer reads 25:00, the first-visit line is gone', async ({ page }) => {
   await openAtNine(page)
   await page.getByRole('button', { name: 'Start' }).click()
   await page.clock.runFor(minutes(25))
@@ -101,11 +101,11 @@ test('rule 2: at 9:25 one ringed tree sits top-left, the timer reads 25:00, the 
   await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()
   await expect(page.getByText('Finish a session to grow your first tree.')).toHaveCount(0)
 
-  // Top-left, right under the line
+  // Right under the line, centered in its row
   const tree = await page.getByRole('img', { name: /tree/i }).boundingBox()
   const forest = await page.getByRole('list', { name: 'Forest' }).boundingBox()
-  expect(tree.x).toBe(forest.x)
   expect(tree.y).toBe(forest.y)
+  expect(tree.x + tree.width / 2).toBeCloseTo(forest.x + forest.width / 2, 0)
 })
 
 test('the ring is a 1.5px dashed orange line, 3px on and 2px off', async ({ page }) => {
@@ -256,7 +256,7 @@ async function growTree(page) {
   await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()
 }
 
-test('grow 3 trees: the newest is top-left, right under the line', async ({ page }) => {
+test('grow 3 trees: the newest is first in the top row, right under the line', async ({ page }) => {
   await openAtNine(page)
   const trees = page.getByRole('img', { name: /tree/i })
   for (const count of [1, 2, 3]) {
@@ -284,8 +284,9 @@ test('grow 3 trees: the newest is top-left, right under the line', async ({ page
     return section.getBoundingClientRect().top + parseFloat(style.borderTopWidth) + parseFloat(style.paddingTop)
   })
   expect(newest.y).toBeCloseTo(under, 0)
-  const left = await forest.evaluate((list) => list.getBoundingClientRect().left)
-  expect(newest.x).toBeCloseTo(left, 0)
+  // The row is centered: as much room left of the newest tree as right of the oldest
+  const { left, right } = await forest.evaluate((list) => list.getBoundingClientRect().toJSON())
+  expect(newest.x - left).toBeCloseTo(right - (boxes[2].x + boxes[2].width), 0)
 })
 
 async function openWithTrees(page, count) {
@@ -305,7 +306,7 @@ async function openWithTrees(page, count) {
   await page.goto('/')
 }
 
-test('40 trees wrap into rows: roughly a dozen per row on a phone, a few dozen on a laptop, nothing off the side', async ({ page }, testInfo) => {
+test('40 trees wrap into rows: about six per row on a phone, about two dozen on a laptop, nothing off the side', async ({ page }, testInfo) => {
   await openWithTrees(page, 40)
   const trees = page.getByRole('img', { name: /tree/i })
   await expect(trees).toHaveCount(40)
@@ -313,13 +314,13 @@ test('40 trees wrap into rows: roughly a dozen per row on a phone, a few dozen o
   const rows = [...new Set(tops)]
   const perRow = tops.filter((top) => top === rows[0]).length
   if (testInfo.project.name === 'phone') {
-    expect(perRow).toBeGreaterThanOrEqual(10)
-    expect(perRow).toBeLessThanOrEqual(14)
+    expect(perRow).toBeGreaterThanOrEqual(5)
+    expect(perRow).toBeLessThanOrEqual(8)
     expect(rows.length).toBeGreaterThan(1)
   } else {
-    // About 46 fit in a row here, so 40 trees make one row
-    expect(perRow).toBeGreaterThanOrEqual(24)
-    expect(perRow).toBeLessThanOrEqual(60)
+    // About 27 fit in a row here, so 40 trees make two rows
+    expect(perRow).toBeGreaterThanOrEqual(20)
+    expect(perRow).toBeLessThanOrEqual(32)
   }
   // Every tree sits inside the screen
   const rights = await trees.evaluateAll((all) => all.map((tree) => tree.getBoundingClientRect().right))
@@ -339,8 +340,8 @@ test('100 trees: on a laptop too, a full row wraps and the next tree starts a ne
   expect(rows.length).toBeGreaterThan(1)
   // Rows fill up in order: every row but the last is full, and each sits below the one before
   const counts = rows.map((row) => tops.filter((top) => top === row).length)
-  // Roughly a dozen per row on a phone, a few dozen on a laptop
-  const [low, high] = testInfo.project.name === 'phone' ? [10, 14] : [24, 60]
+  // About six per row on a phone, about two dozen on a laptop
+  const [low, high] = testInfo.project.name === 'phone' ? [5, 8] : [20, 32]
   expect(counts[0]).toBeGreaterThanOrEqual(low)
   expect(counts[0]).toBeLessThanOrEqual(high)
   for (const count of counts.slice(0, -1)) expect(count).toBe(counts[0])
