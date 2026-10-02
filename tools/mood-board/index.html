@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mood Board</title>
+<style>
+  :root {
+    --bg: #eef0ec;
+    --surface: #ffffff;
+    --text: #1f2420;
+    --muted: #5f675f;
+    --border: #d6dbd4;
+    --accent: #2f6b4f;
+    --accent-soft: #e1eee6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141815;
+      --surface: #1e231f;
+      --text: #e6ebe5;
+      --muted: #9aa49a;
+      --border: #333a34;
+      --accent: #7cc4a0;
+      --accent-soft: #1f3329;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  header {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 16px 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: end;
+    justify-content: space-between;
+  }
+  h1 { font-size: 1.8rem; line-height: 1.2; margin: 0 0 4px; }
+  .lede { margin: 0; color: var(--muted); }
+  button {
+    font: inherit;
+    font-weight: 600;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: var(--surface);
+    cursor: pointer;
+  }
+  button:hover { filter: brightness(1.08); }
+  button:focus-visible, textarea:focus-visible, a:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* Masonry board: images keep their own shape */
+  .board {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 16px 80px;
+    columns: 3 320px;
+    column-gap: 20px;
+  }
+  .card {
+    break-inside: avoid;
+    margin: 0 0 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .card a { display: block; }
+  .card img { display: block; width: 100%; height: auto; }
+  .card .body { padding: 12px 14px 14px; }
+  .name { font-weight: 600; margin: 0; word-break: break-word; }
+  .caption { color: var(--muted); font-size: 0.9rem; margin: 2px 0 10px; }
+  label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 4px; }
+  textarea {
+    width: 100%;
+    min-height: 80px;
+    resize: vertical;
+    padding: 10px;
+    font: inherit;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .status { font-size: 0.8rem; color: var(--muted); height: 1.2em; margin-top: 4px; }
+  .card.has-note { border-color: var(--accent); }
+  .card.has-note textarea { background: var(--accent-soft); }
+  .missing {
+    padding: 40px 16px;
+    text-align: center;
+    color: var(--muted);
+    background: var(--bg);
+  }
+  .empty { max-width: 1200px; margin: 0 auto; padding: 0 16px; color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Mood board</h1>
+    <p class="lede">Every picture in <code>docs/references/</code>. Write what you like about each one. Notes save in this browser as you type.</p>
+  </div>
+  <button id="copy" type="button">Copy all notes</button>
+</header>
+<main class="board" id="board"></main>
+
+<script>
+// Rewritten by `node tools/mood-board/update.mjs` — run it after adding or removing pictures.
+/* IMAGES:START */
+const IMAGES = [
+  {"file":"camp-badge.jpg","caption":"1965 camp patch, Camp Trexler"},
+  {"file":"field-guide-fern.jpg","caption":"Fern plate from an old field guide (Polypodium phegopteris, nature-printed)"},
+  {"file":"misty-forest-path.jpg","caption":"Misty forest path"},
+  {"file":"moss-close-up.jpg","caption":"Close-up of moss"},
+  {"file":"quiet-library.jpg","caption":"Reading room with green lamps, Boston Public Library"}
+];
+/* IMAGES:END */
+
+const FOLDER = "../../docs/references/";
+const KEY = "mood-board:note:";
+
+function load(file) {
+  try { return localStorage.getItem(KEY + file) || ""; } catch { return ""; }
+}
+function save(file, text) {
+  try {
+    if (text.trim()) localStorage.setItem(KEY + file, text);
+    else localStorage.removeItem(KEY + file);
+    return true;
+  } catch { return false; }
+}
+
+const board = document.getElementById("board");
+
+if (!IMAGES.length) {
+  board.outerHTML = '<p class="empty">No pictures found. Add some to docs/references/ and run <code>node tools/mood-board/update.mjs</code>.</p>';
+}
+
+for (const { file, caption } of IMAGES) {
+  const id = "note-" + file.replace(/[^a-z0-9]/gi, "-");
+  const card = document.createElement("article");
+  card.className = "card";
+  card.innerHTML = `
+    <a href="${FOLDER + encodeURIComponent(file)}" target="_blank" rel="noopener">
+      <img loading="lazy" alt="">
+    </a>
+    <div class="body">
+      <p class="name"></p>
+      <p class="caption"></p>
+      <label for="${id}">What I like about it</label>
+      <textarea id="${id}" placeholder="The colors? The mood? The texture?"></textarea>
+      <div class="status" aria-live="polite"></div>
+    </div>`;
+
+  const img = card.querySelector("img");
+  img.src = FOLDER + encodeURIComponent(file);
+  img.alt = caption || file;
+  img.addEventListener("error", () => {
+    card.querySelector("a").outerHTML = '<div class="missing">Picture not found. Run update.mjs?</div>';
+  });
+  card.querySelector(".name").textContent = file;
+  const cap = card.querySelector(".caption");
+  if (caption) cap.textContent = caption; else cap.remove();
+
+  const area = card.querySelector("textarea");
+  const status = card.querySelector(".status");
+  area.value = load(file);
+  card.classList.toggle("has-note", !!area.value.trim());
+
+  let timer;
+  area.addEventListener("input", () => {
+    card.classList.toggle("has-note", !!area.value.trim());
+    status.textContent = "Saving…";
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      status.textContent = save(file, area.value) ? "Saved" : "Couldn't save (browser storage is blocked)";
+    }, 300);
+  });
+
+  board.appendChild(card);
+}
+
+// One message to paste back to your AI, e.g. before exploring looks.
+document.getElementById("copy").addEventListener("click", async (e) => {
+  const lines = ["My mood board notes (docs/references/):", ""];
+  for (const { file } of IMAGES) {
+    const note = load(file).trim();
+    lines.push(`- ${file}: ${note || "(no note)"}`);
+  }
+  const text = lines.join("\n");
+  const btn = e.currentTarget;
+  try {
+    await navigator.clipboard.writeText(text);
+    btn.textContent = "Copied!";
+  } catch {
+    window.prompt("Copy your notes:", text);
+  }
+  setTimeout(() => { btn.textContent = "Copy all notes"; }, 1500);
+});
+</script>
+</body>
+</html>

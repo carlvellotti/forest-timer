@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Three Things Every App Is Made Of</title>
+<style>
+  :root {
+    --bg: #faf8f4;
+    --surface: #ffffff;
+    --text: #23211d;
+    --muted: #6b665d;
+    --border: #e6e1d7;
+    --gold: #b8860b;
+    --gold-soft: #fbf3dc;
+    --maple: #b5462f;
+    --maple-soft: #fbe9e4;
+    --denim: #3b5f8a;
+    --denim-soft: #e6eef7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1916;
+      --surface: #23221e;
+      --text: #ece8e0;
+      --muted: #a39d92;
+      --border: #3a3832;
+      --gold: #e0b44a;
+      --gold-soft: #3a3120;
+      --maple: #e47b63;
+      --maple-soft: #3d2620;
+      --denim: #7fa6d6;
+      --denim-soft: #1f2a38;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 18px/1.65 Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+  }
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 48px 16px 80px;
+  }
+  h1, h2, h3, .badge, th, .label {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  h1 { font-size: 2.1rem; line-height: 1.2; margin: 0 0 12px; }
+  h2 {
+    font-size: 1.3rem;
+    margin: 56px 0 16px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; margin: 0 0 6px; }
+  p { margin: 0 0 16px; }
+  .lede { font-size: 1.2rem; color: var(--muted); margin-bottom: 32px; }
+  .jump { margin: -16px 0 32px; font: 600 1rem system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .jump a { color: var(--maple); text-decoration: none; border-bottom: 1px solid currentColor; }
+  .jump a:hover { border-bottom-width: 2px; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+  /* Diagram: three steps building on each other */
+  .stack { display: grid; gap: 12px; margin: 24px 0 8px; }
+  .step {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 16px;
+    align-items: center;
+    padding: 16px 20px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .badge {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-weight: 700; font-size: 1.4rem;
+    color: #fff;
+  }
+  .p .badge { background: var(--gold); }
+  .l .badge { background: var(--maple); }
+  .d .badge { background: var(--denim); }
+  .p { border-left: 6px solid var(--gold); }
+  .l { border-left: 6px solid var(--maple); }
+  .d { border-left: 6px solid var(--denim); }
+  .step p { margin: 0; color: var(--muted); font-size: 1rem; }
+  .arrow { text-align: center; color: var(--muted); font-size: 1.2rem; line-height: 1; }
+  .caption { text-align: center; color: var(--muted); font-size: 0.95rem; }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; margin: 16px 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+    background: var(--surface);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  th, td { text-align: left; padding: 12px 14px; vertical-align: top; border-bottom: 1px solid var(--border); }
+  th { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+  tr:last-child td { border-bottom: none; }
+  td:first-child { font-weight: 700; white-space: nowrap; }
+  .tp { color: var(--gold); } .tl { color: var(--maple); } .td { color: var(--denim); }
+
+  /* Detail cards */
+  .card {
+    padding: 20px 22px;
+    border-radius: 12px;
+    margin: 16px 0;
+  }
+  .card.p { background: var(--gold-soft); }
+  .card.l { background: var(--maple-soft); }
+  .card.d { background: var(--denim-soft); }
+  .card p:last-child { margin-bottom: 0; }
+  .label {
+    font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; margin-bottom: 4px;
+  }
+  .card.p .label { color: var(--gold); }
+  .card.l .label { color: var(--maple); }
+  .card.d .label { color: var(--denim); }
+
+  .catch {
+    border: 1px dashed var(--denim);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 0.95rem;
+  }
+
+  ul.reasons { padding-left: 20px; }
+  ul.reasons li { margin-bottom: 10px; }
+
+  .summary {
+    font-size: 1.25rem;
+    text-align: center;
+    padding: 28px 16px;
+    border-radius: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+
+  /* Questions */
+  .questions { counter-reset: q; list-style: none; padding: 0; }
+  .questions li {
+    counter-increment: q;
+    position: relative;
+    padding: 18px 20px 18px 64px;
+    margin-bottom: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .questions li::before {
+    content: counter(q);
+    position: absolute; left: 20px; top: 18px;
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--text); color: var(--bg);
+    display: grid; place-items: center;
+    font: 700 0.95rem system-ui, sans-serif;
+  }
+  .questions .q { margin-bottom: 12px; }
+  textarea {
+    width: 100%;
+    min-height: 96px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    font: 1rem/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    resize: vertical;
+  }
+  textarea:focus { outline: 2px solid var(--denim); outline-offset: 1px; border-color: transparent; }
+
+  .copy-row {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px;
+    margin-top: 24px;
+  }
+  #copy {
+    font: 600 1rem system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding: 12px 22px;
+    border: none;
+    border-radius: 999px;
+    background: var(--maple);
+    color: #fff;
+    cursor: pointer;
+  }
+  #copy:hover { filter: brightness(1.08); }
+  #copy:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+  #status { color: var(--muted); font: 0.95rem system-ui, sans-serif; }
+</style>
+</head>
+<body>
+<main>
+
+  <h1>The three things every app is made of</h1>
+  <p class="lede">Every app, from a tiny tool to a huge website, is built from the same three things. A good way to build something is to add them one at a time, in this order.</p>
+  <p class="jump"><a href="#questions">Jump to the questions ↓</a></p>
+
+  <div class="stack" role="img" aria-label="Presentation, then logic, then data">
+    <div class="step p">
+      <div class="badge">P</div>
+      <div><h3>Presentation</h3><p>What you see. Looks.</p></div>
+    </div>
+    <div class="arrow">↓</div>
+    <div class="step l">
+      <div class="badge">L</div>
+      <div><h3>Logic</h3><p>What it does when you use it. Actions.</p></div>
+    </div>
+    <div class="arrow">↓</div>
+    <div class="step d">
+      <div class="badge">D</div>
+      <div><h3>Data</h3><p>What it remembers. Memory.</p></div>
+    </div>
+  </div>
+  <p class="caption">Each step builds on the one before it.</p>
+
+  <h2>At a glance</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Thing</th><th>The question it answers</th><th>In the review page</th><th>Written in</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="tp">Presentation</td><td>What does it look like?</td><td>A long markdown file turned into a tidy page with sections, a table or a diagram</td><td>HTML and CSS</td></tr>
+        <tr><td class="tl">Logic</td><td>What happens when I do something?</td><td>An answer box under each question, plus a button that copies all your answers as one message</td><td>JavaScript</td></tr>
+        <tr><td class="td">Data</td><td>What does it remember?</td><td>Your answers are still there after you refresh</td><td>The browser's own storage</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>The three things, in plain language</h2>
+
+  <div class="card p">
+    <div class="label">Presentation</div>
+    <h3>Make it readable</h3>
+    <p>The first step only changes how things <em>look</em>. Nothing on the page reacts to you yet. You get the same words, but they're laid out so you can actually read them, so you're not scrolling a wall of chat text.</p>
+  </div>
+
+  <div class="card l">
+    <div class="label">Logic</div>
+    <h3>Make it do something</h3>
+    <p>Now the page responds when you use it. You type into the boxes, press a button, and it gathers your answers into one message you can paste back to your AI. That's the full round trip: the AI writes to you, you answer on the page, and the AI gets your answers.</p>
+  </div>
+
+  <div class="card d">
+    <div class="label">Data</div>
+    <h3>Make it remember</h3>
+    <p>Refresh the page and your answers vanish, because nothing saved them. Saving usually means you need a server somewhere (a "back end"). But every browser has a little storage space of its own, right on your device. Put your answers there and they survive a refresh.</p>
+    <p class="catch"><strong>The catch:</strong> that storage belongs to <em>that one browser on that one device</em>. Open the same page in a different browser and the boxes are empty. The data didn't travel with the page.</p>
+  </div>
+
+  <h2>Why build it in this order?</h2>
+  <ul class="reasons">
+    <li><strong>Each step works on its own.</strong> After presentation you already have something useful to read. After logic you can answer things. Data is the finishing touch.</li>
+    <li><strong>You can tell which part did what.</strong> If something breaks, you know which of the three you just added.</li>
+    <li><strong>It's the same pattern everywhere.</strong> Once you see presentation, logic and data in a one-file tool, you'll start to spot them in every app you use.</li>
+  </ul>
+
+  <h2>The short version</h2>
+  <p class="summary">Looks, then actions, then memory.<br>Every app has all three, and you can build them one at a time.</p>
+
+  <h2 id="questions">Three questions for you</h2>
+  <ol class="questions">
+    <li>
+      <p class="q">Think of an app you use every day. Name one example of its presentation, one of its logic and one of its data.</p>
+      <textarea aria-label="Your answer to question 1" placeholder="Your answer…"></textarea>
+    </li>
+    <li>
+      <p class="q">Your answers on the review page disappear when you refresh. Which of the three things is missing, and why doesn't adding more presentation or logic fix it?</p>
+      <textarea aria-label="Your answer to question 2" placeholder="Your answer…"></textarea>
+    </li>
+    <li>
+      <p class="q">You save your answers in the browser, then open the same page on your phone. What will you see, and why?</p>
+      <textarea aria-label="Your answer to question 3" placeholder="Your answer…"></textarea>
+    </li>
+  </ol>
+
+  <div class="copy-row">
+    <button type="button" id="copy">Copy my answers</button>
+    <span id="status" role="status" aria-live="polite"></span>
+  </div>
+
+</main>
+<script>
+  const button = document.getElementById('copy');
+  const status = document.getElementById('status');
+  const boxes = document.querySelectorAll('.questions textarea');
+
+  // Answers are saved under this document's name, so other review pages keep their own.
+  const STORAGE_KEY = 'review-page:three-things-every-app-is-made-of';
+
+  function saveAnswers() {
+    const answers = [...boxes].map(box => box.value);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(answers));
+    } catch {
+      // Storage can be blocked (e.g. private windows); the page still works without it.
+    }
+  }
+
+  function loadAnswers() {
+    try {
+      const answers = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      boxes.forEach((box, i) => { box.value = answers[i] || ''; });
+    } catch {
+      // Nothing saved, or storage unavailable: leave the boxes empty.
+    }
+  }
+
+  loadAnswers();
+  boxes.forEach(box => box.addEventListener('input', saveAnswers));
+
+  // Build one message: each question, then the answer under it.
+  function buildMessage() {
+    const items = document.querySelectorAll('.questions li');
+    const parts = [...items].map((li, i) => {
+      const question = li.querySelector('.q').textContent.trim();
+      const answer = li.querySelector('textarea').value.trim() || '(no answer)';
+      return `${i + 1}. ${question}\n${answer}`;
+    });
+    return 'My answers to "The three things every app is made of":\n\n' + parts.join('\n\n');
+  }
+
+  // Fallback for browsers that block the clipboard API on local files.
+  function copyWithFallback(text) {
+    const box = document.createElement('textarea');
+    box.value = text;
+    box.style.position = 'fixed';
+    box.style.opacity = '0';
+    document.body.appendChild(box);
+    box.select();
+    const ok = document.execCommand('copy');
+    box.remove();
+    return ok;
+  }
+
+  button.addEventListener('click', async () => {
+    const message = buildMessage();
+    let ok = false;
+    try {
+      await navigator.clipboard.writeText(message);
+      ok = true;
+    } catch {
+      ok = copyWithFallback(message);
+    }
+    status.textContent = ok
+      ? 'Copied! Paste it back to your AI.'
+      : 'Couldn’t copy. Select your answers and copy them by hand.';
+  });
+</script>
+</body>
+</html>
