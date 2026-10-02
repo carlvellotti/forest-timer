@@ -2,7 +2,7 @@
 
 ## The one line
 
-A focus timer that grows a tree in your forest every time you finish a session.
+A focus timer that turns your finished sessions into a forest.
 
 ## Who it's for
 
