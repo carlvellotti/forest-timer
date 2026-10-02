@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { NO_STREAK_LINE, nextMidnight, streak, streakLine, thisWeek, weekTotalLine } from './stats'
+import { NO_STREAK_LINE, nextMidnight, streak, thisWeek, weekTotalLine } from './stats'
 
 // Moves on at midnight, and whenever the page comes back into view, so the week is never a day behind.
 function useToday() {
@@ -34,7 +34,13 @@ function Stats({ records, onBack }) {
       <section className="flex flex-col items-center px-screen pt-timer-top pb-gap">
         {/* The page's one big thing, where the timer sits; at zero, a quiet line that never scolds */}
         {days > 0 ? (
-          <p className="text-center text-timer">{streakLine(days)}</p>
+          // DESIGN.md: the number at the timer's size, "day streak" under it in body text, so it fits a phone
+          <p className="flex flex-col items-center">
+            <span className="text-timer tabular-nums">{days}</span>
+            <span>
+              <span className="sr-only">-</span>day streak
+            </span>
+          </p>
         ) : (
           <p className="text-center">{NO_STREAK_LINE}</p>
         )}

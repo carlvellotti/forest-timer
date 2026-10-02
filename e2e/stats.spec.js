@@ -165,8 +165,19 @@ test('rule 3: finished Mon, Tue, Wed; on Wednesday it reads "3-day streak", big,
   await openAt(page, new Date('2026-09-30T20:00:00'), '/stats')
   const line = page.getByText('3-day streak')
   await expect(line).toBeVisible()
-  await expect(line).toHaveCSS('font-size', '90px')
-  await expect(line).toHaveCSS('color', ink)
+  // DESIGN.md (changed 2026-10-02 while molding): the number at the timer's size, "day streak" under it in body text
+  const number = line.getByText('3', { exact: true })
+  const words = line.getByText('day streak')
+  await expect(number).toHaveCSS('font-size', '90px')
+  await expect(words).toHaveCSS('font-size', '16px')
+  await expect(number).toHaveCSS('color', ink)
+  await expect(words).toHaveCSS('color', ink)
+  // Each on one line, words under the number, on a phone too
+  const n = await number.boundingBox()
+  const w = await words.boundingBox()
+  expect(n.height).toBeLessThanOrEqual(90)
+  expect(w.height).toBeLessThanOrEqual(24)
+  expect(w.y).toBeGreaterThanOrEqual(n.y + n.height - 1)
   const week = await page.getByText('3 sessions this week').boundingBox()
   expect((await line.boundingBox()).y + (await line.boundingBox()).height).toBeLessThanOrEqual(week.y)
   // Where the timer sits: a third of the way down

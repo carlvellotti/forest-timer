@@ -67,11 +67,6 @@ export function streak(records, now) {
   return count
 }
 
-// "1-day streak", "3-day streak"; at zero, the page shows the no-streak line instead
-export function streakLine(count) {
-  return `${count}-day streak`
-}
-
 export const NO_STREAK_LINE = 'No streak yet. Finish a session to start one.'
 
 // "1 session this week", "9 sessions this week"

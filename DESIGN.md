@@ -110,6 +110,8 @@ None. Things appear and change without animation: no bounces, pops or pulses.
 - **Start:** a solid moss-green block with the one word "Start" in stone text, and no icon.
 - **Give up:** a quiet underlined text link in the muted color, under the timer while a session is running. Start and Give up are never on screen together. It isn't a button.
 - **Forest:** soft moss pines in centered rows, each in a 40px square with 10px between them. The pine fills most of its square, leaving just enough room for the ring. About six fit in a row on a phone and about two dozen on a laptop. The tree you just grew gets a small orange dashed ring around it, like stitching on a badge, until you press Start again or leave the page. Otherwise, trees have no ring.
+- **Streak:** on the stats page, the page's one big thing, where the timer sits on the other page. The number alone is at the timer's size, with "day streak" right under it in body text, both in the text color, centered. Split this way it fits a phone on one line at any length (decided 2026-10-02: "3-day streak" in one line at the timer's size wrapped on a phone). At zero there's no number: "No streak yet. Finish a session to start one." in body text and the text color, like the first-visit line.
+- **This week:** under the streak, "9 sessions this week" in body text and the text color, then the seven short day names with each day's count under it. Counts and day names are muted, except today's, in the text color.
 - **First-visit line:** before the first tree, the forest holds one line, "Finish a session to grow your first tree." It's body text in the text color (not muted), centered where the trees will grow, so it reads as the start of the forest rather than a footnote.
 
 ## Do's and don'ts

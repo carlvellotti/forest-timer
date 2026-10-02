@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { nextMidnight, streak, streakLine, thisWeek, weekTotalLine } from './stats'
+import { nextMidnight, streak, thisWeek, weekTotalLine } from './stats'
 
 // Local times, so these read the same in any time zone. 2026-09-28 is a Monday.
 const at = (day, hour, minute = 0) => new Date(2026, 8, day, hour, minute)
@@ -79,7 +79,6 @@ const monToWed = [finishedAt(28, 9), finishedAt(29, 9), finishedAt(30, 9)]
 
 test('rule 3: finished Mon, Tue, Wed; on Wednesday it reads "3-day streak"', () => {
   expect(streak(monToWed, at(30, 20))).toBe(3)
-  expect(streakLine(3)).toBe('3-day streak')
 })
 
 test('rule 4: Thursday 9am with nothing yet, still 3; finish one Thursday, 4; skip Thursday, and Friday is 0', () => {
@@ -91,7 +90,6 @@ test('rule 4: Thursday 9am with nothing yet, still 3; finish one Thursday, 4; sk
 
 test('one day reads "1-day streak"', () => {
   expect(streak([finishedAt(30, 9)], at(30, 12))).toBe(1)
-  expect(streakLine(1)).toBe('1-day streak')
 })
 
 test('a streak runs back past Monday into last week', () => {
