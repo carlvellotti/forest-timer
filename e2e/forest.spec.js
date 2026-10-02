@@ -84,11 +84,13 @@ test('fast mode: in the built app, ?fast does nothing and a session is 25:00', a
   await expect(page.getByRole('timer')).toHaveText('24:59')
 })
 
-test('first visit: "Finish a session to grow your first tree." in muted grey', async ({ page }) => {
+test('first visit: "Finish a session to grow your first tree." in body text, the text color, centered', async ({ page }) => {
   await openAtNine(page)
   const line = page.getByText('Finish a session to grow your first tree.')
   await expect(line).toBeVisible()
-  await expect(line).toHaveCSS('color', 'rgb(111, 106, 99)')
+  await expect(line).toHaveCSS('color', 'rgb(38, 35, 31)')
+  await expect(line).toHaveCSS('font-size', '16px')
+  await expect(line).toHaveCSS('text-align', 'center')
 })
 
 test('rule 2: at 9:25 one ringed tree sits first in the top row, the timer reads 25:00, the first-visit line is gone', async ({ page }) => {
