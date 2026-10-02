@@ -98,7 +98,7 @@ Corners are nearly square: 2px on buttons and frames, and 0 everywhere else.
 
 ## Icons
 
-Small, flat icons from Lucide, drawn filled (solid), like a solid pine for the app's mark and a solid triangle for Start. They have no outlines and no color of their own: they take the text color, or stone (on-primary) on a moss-green button.
+Small, flat icons from Lucide, drawn filled (solid), like a solid pine for the app's mark. Buttons are words alone, with no icon. They have no outlines and no color of their own: they take the text color, or stone (on-primary) on a moss-green button.
 
 ## Motion
 
@@ -106,7 +106,7 @@ None. Things appear and change without animation: no bounces, pops or pulses.
 
 ## Components
 
-- **Start:** a solid moss-green block with stone text and a small filled play icon.
+- **Start:** a solid moss-green block with the one word "Start" in stone text, and no icon.
 - **Give up:** a quiet underlined text link in the muted color, under the timer while a session is running. Start and Give up are never on screen together. It isn't a button.
 - **Forest:** soft moss pines in centered rows, each in a 40px square with 10px between them. The pine fills most of its square, leaving just enough room for the ring. About six fit in a row on a phone and about two dozen on a laptop. The tree you just grew gets a small orange dashed ring around it, like stitching on a badge, until you press Start again or leave the page. Otherwise, trees have no ring.
 - **First-visit line:** before the first tree, the forest holds one line, "Finish a session to grow your first tree." It's body text in the text color (not muted), centered where the trees will grow, so it reads as the start of the forest rather than a footnote.

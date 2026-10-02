@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Play } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { loadSessionRecords, treesFrom } from './browser-storage'
 import Forest from './Forest'
@@ -44,10 +43,7 @@ function App() {
         </p>
         <div className="row-start-3 flex flex-col items-center gap-gap pt-gap">
           {!running ? (
-            <Button onClick={startSession}>
-              <Play className="fill-current" strokeWidth={0} aria-hidden="true" />
-              Start
-            </Button>
+            <Button onClick={startSession}>Start</Button>
           ) : askingToGiveUp ? (
             <>
               <p className="text-muted-foreground" role="status">

@@ -33,6 +33,13 @@ test('ready: the timer reads 25:00 with Start under it, no Give up, plain tab ti
   expect(start.y).toBeGreaterThan(timer.y + timer.height)
 })
 
+test('Start is the one word, with no icon', async ({ page }) => {
+  await openAtNine(page)
+  const start = page.getByRole('button', { name: 'Start' })
+  await expect(start).toHaveText('Start')
+  await expect(start.locator('svg')).toHaveCount(0)
+})
+
 test('press Start: Start disappears, Give up appears, and a second later it reads 24:59', async ({ page }) => {
   await openAtNine(page)
   await page.getByRole('button', { name: 'Start' }).click()
