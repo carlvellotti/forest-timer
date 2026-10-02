@@ -37,11 +37,26 @@ test('storage that is not a list of records shows an empty forest instead of bre
   expect(loadSessionRecords()).toEqual([])
 })
 
+const keptAside = () =>
+  Object.keys(localStorage)
+    .filter((key) => key.startsWith('forest-timer:unreadable-session-records:'))
+    .map((key) => localStorage.getItem(key))
+
 test('rule 10: unreadable storage is kept aside, not wiped, before the next save', () => {
   localStorage.setItem('forest-timer:session-records', 'not json')
   saveSessionRecord(finishedAt(9))
-  expect(localStorage.getItem('forest-timer:unreadable-session-records')).toBe('not json')
+  expect(keptAside()).toEqual(['not json'])
   expect(loadSessionRecords()).toEqual([finishedAt(9)])
+})
+
+test('rule 10: a saved list with a few unreadable entries is kept aside too, and loading alone keeps nothing new', () => {
+  const saved = JSON.stringify([finishedAt(8), { ended: 'finished' }])
+  localStorage.setItem('forest-timer:session-records', saved)
+  expect(loadSessionRecords()).toEqual([finishedAt(8)])
+  expect(keptAside()).toEqual([])
+  saveSessionRecord(finishedAt(9))
+  expect(keptAside()).toEqual([saved])
+  expect(loadSessionRecords()).toEqual([finishedAt(8), finishedAt(9)])
 })
 
 test('blocked storage shows an empty forest instead of breaking', () => {
@@ -50,4 +65,8 @@ test('blocked storage shows an empty forest instead of breaking', () => {
   })
   expect(loadSessionRecords()).toEqual([])
   getItem.mockRestore()
+})
+
+test('newest first goes by start time, even if records were saved out of order', () => {
+  expect(treesFrom([finishedAt(10), finishedAt(8), finishedAt(9)])).toEqual([finishedAt(10), finishedAt(9), finishedAt(8)])
 })

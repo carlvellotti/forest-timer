@@ -239,6 +239,117 @@ test('rule 3: with 0:02 left, click Give up and wait: at 0:00 the question goes 
   ])
 })
 
+async function growTree(page) {
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(minutes(25))
+  await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()
+}
+
+test('grow 3 trees: the newest is top-left, right under the line', async ({ page }) => {
+  await openAtNine(page)
+  const trees = page.getByRole('img', { name: /tree/i })
+  for (const count of [1, 2, 3]) {
+    await growTree(page)
+    await expect(trees).toHaveCount(count)
+    // The new tree takes the first spot, and the one before it moves along one
+    await expect(trees.first()).toHaveAccessibleName('Tree you just grew')
+    if (count > 1) await expect(trees.nth(1)).toHaveAccessibleName('Tree')
+  }
+
+  const newest = await page.getByRole('img', { name: 'Tree you just grew' }).boundingBox()
+  const boxes = await Promise.all([0, 1, 2].map((i) => trees.nth(i).boundingBox()))
+  // Newest first: it's the leftmost tree in the top row
+  expect(boxes[0]).toEqual(newest)
+  for (const older of boxes.slice(1)) {
+    expect(older.y).toBe(newest.y)
+    expect(older.x).toBeGreaterThan(newest.x)
+  }
+
+  // Right under the line: the forest's top edge is the line, and nothing sits between it and the tree
+  const forest = page.getByRole('list', { name: 'Forest' })
+  const under = await forest.evaluate((list) => {
+    const section = list.parentElement
+    const style = getComputedStyle(section)
+    return section.getBoundingClientRect().top + parseFloat(style.borderTopWidth) + parseFloat(style.paddingTop)
+  })
+  expect(newest.y).toBeCloseTo(under, 0)
+  const left = await forest.evaluate((list) => list.getBoundingClientRect().left)
+  expect(newest.x).toBeCloseTo(left, 0)
+})
+
+async function openWithTrees(page, count) {
+  // Seeds the trees on the first visit only, so a reload keeps whatever was saved since
+  await page.addInitScript((count) => {
+    if (localStorage.getItem('forest-timer:session-records') !== null) return
+    const records = Array.from({ length: count }, (_, i) => {
+      const startedAt = new Date(Date.UTC(2026, 8, 1) + i * 60 * 60 * 1000)
+      return {
+        startedAt: startedAt.toISOString(),
+        endedAt: new Date(startedAt.getTime() + 25 * 60 * 1000).toISOString(),
+        ended: 'finished',
+      }
+    })
+    localStorage.setItem('forest-timer:session-records', JSON.stringify(records))
+  }, count)
+  await page.goto('/')
+}
+
+test('40 trees wrap into rows: roughly a dozen per row on a phone, a few dozen on a laptop, nothing off the side', async ({ page }, testInfo) => {
+  await openWithTrees(page, 40)
+  const trees = page.getByRole('img', { name: /tree/i })
+  await expect(trees).toHaveCount(40)
+  const tops = await trees.evaluateAll((all) => all.map((tree) => Math.round(tree.getBoundingClientRect().top)))
+  const rows = [...new Set(tops)]
+  const perRow = tops.filter((top) => top === rows[0]).length
+  if (testInfo.project.name === 'phone') {
+    expect(perRow).toBeGreaterThanOrEqual(10)
+    expect(perRow).toBeLessThanOrEqual(14)
+    expect(rows.length).toBeGreaterThan(1)
+  } else {
+    // About 46 fit in a row here, so 40 trees make one row
+    expect(perRow).toBeGreaterThanOrEqual(24)
+    expect(perRow).toBeLessThanOrEqual(60)
+  }
+  // Every tree sits inside the screen
+  const rights = await trees.evaluateAll((all) => all.map((tree) => tree.getBoundingClientRect().right))
+  const width = await page.evaluate(() => window.innerWidth)
+  for (const right of rights) expect(right).toBeLessThanOrEqual(width)
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
+  expect(overflow).toBe(0)
+})
+
+test('100 trees: on a laptop too, a full row wraps and the next tree starts a new row underneath', async ({ page }, testInfo) => {
+  await openWithTrees(page, 100)
+  const tops = await page
+    .getByRole('img', { name: /tree/i })
+    .evaluateAll((all) => all.map((tree) => Math.round(tree.getBoundingClientRect().top)))
+  const rows = [...new Set(tops)]
+  expect(rows.length).toBeGreaterThan(1)
+  // Rows fill up in order: every row but the last is full, and each sits below the one before
+  const counts = rows.map((row) => tops.filter((top) => top === row).length)
+  // Roughly a dozen per row on a phone, a few dozen on a laptop
+  const [low, high] = testInfo.project.name === 'phone' ? [10, 14] : [24, 60]
+  expect(counts[0]).toBeGreaterThanOrEqual(low)
+  expect(counts[0]).toBeLessThanOrEqual(high)
+  for (const count of counts.slice(0, -1)) expect(count).toBe(counts[0])
+  expect(counts.at(-1)).toBeLessThanOrEqual(counts[0])
+  expect(rows).toEqual([...rows].sort((a, b) => a - b))
+})
+
+test('rule 10: no button anywhere wipes the forest', async ({ page }) => {
+  await openWithTrees(page, 40)
+  // Ready: the only thing to press is Start
+  await expect(page.getByRole('button')).toHaveText(['Start'])
+  await expect(page.getByRole('link')).toHaveCount(0)
+  // Running and asking: only Give up, then Keep going and Give up
+  await page.getByRole('button', { name: 'Start' }).click()
+  await expect(page.getByRole('button')).toHaveText(['Give up'])
+  await page.getByRole('button', { name: 'Give up' }).click()
+  await expect(page.getByRole('button')).toHaveText(['Keep going', 'Give up'])
+  await page.getByRole('button', { name: 'Give up' }).click()
+  await expect(page.getByRole('img', { name: /tree/i })).toHaveCount(40)
+})
+
 test('nothing runs off the side of the screen', async ({ page }) => {
   await page.goto('/')
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
