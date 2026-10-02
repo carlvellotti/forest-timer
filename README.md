@@ -1,6 +1,5 @@
 # Forest Timer
 
-A focus timer that grows a tree in your forest every time you finish a session.
+A 25-minute focus timer that grows a tree in your forest every time you finish a session. Give up halfway, and there's no tree.
 
-- What it is and why: [idea.md](idea.md)
-- How to work on it: [AGENTS.md](AGENTS.md)
+It runs entirely in your browser: no account, and your forest is saved on your device for next time.
