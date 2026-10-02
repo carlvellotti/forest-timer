@@ -57,3 +57,10 @@ Only one tab runs the app, through the browser's Web Locks. Consequences:
 - A page holding a lock can't be kept in the browser's back/forward memory. Leaving mid-session and pressing Back loads the app fresh, so it's a give-up (rule 6).
 - A phone that puts the session's tab away to save memory lets go of the lock. Opening the app in a new tab then runs it and records a give-up, as with a close.
 - Web Locks only work on https pages and localhost. On a phone testing the dev server over Wi-Fi (plain http), every tab runs the app. The hosted https site isn't affected.
+
+## Addendum: typing an address is not a reload (2026-10-02)
+
+Typing an address in the same tab mid-session, for example /stats, counts as opening fresh, so it's a give-up, ended about when you typed it. The browser reports it as a new visit, not a reload, the same as coming back after a close.
+
+Considered while building the stats page: making any page load in the tab that started the session carry it on, like a reload. That would have let you peek at /stats mid-session, but it also would have meant leaving to another site in that tab and coming back carries on, blurring "only closing gives up". Kept the simple rule: only a real reload carries a session on. The Stats link is hidden while Running, and the browser's Back button mid-session keeps you on the timer, so the app itself never leads you into this.
+
