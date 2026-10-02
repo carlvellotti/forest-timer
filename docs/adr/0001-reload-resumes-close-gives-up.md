@@ -64,3 +64,17 @@ Typing an address in the same tab mid-session, for example /stats, counts as ope
 
 Considered while building the stats page: making any page load in the tab that started the session carry it on, like a reload. That would have let you peek at /stats mid-session, but it also would have meant leaving to another site in that tab and coming back carries on, blurring "only closing gives up". Kept the simple rule: only a real reload carries a session on. The Stats link is hidden while Running, and the browser's Back button mid-session keeps you on the timer, so the app itself never leads you into this.
 
+
+## Addendum: a tab that can't answer doesn't lock you out (2026-10-02)
+
+Found while checking the first release: in Chrome on a laptop, opening the app and then typing /stats (or ?fast) in the same tab showed "Forest Timer is open in another tab." with only one tab open, and reloading didn't help. Only closing the tab did. Something in that tab, most likely a page the browser had kept or loaded unseen, still held the lock without running the app where you could see it. It couldn't be reproduced in the test browsers, so the fix doesn't depend on the exact cause:
+
+- A page the browser loads unseen, guessing where you're going, only claims the app once it's shown.
+- The tab holding the lock answers when another tab asks "anyone there?". A new tab that finds the lock taken asks, and if nobody answers within half a second, the holder is stuck: the new tab takes the app over.
+- A tab whose app is taken over steps aside and shows "Forest Timer is open in another tab.", so two timers never run.
+
+Opening the app this way is still opening fresh, so a session in progress is a give-up (rule 6), as before.
+
+Trade-off accepted: a real tab the browser has frozen mid-session can't answer either, so opening the app in a second tab takes it over and the session is given up. Before, the second tab showed the line and the frozen tab kept the session. A tab you can see is never frozen, so this needs a second tab opened while the first sits unseen long enough to be frozen.
+
+The earlier line "a page holding a lock can't be kept in the browser's back/forward memory" was true of the test browsers but isn't something to rely on; the answer check covers it either way.

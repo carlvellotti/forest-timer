@@ -788,3 +788,39 @@ test('nothing runs off the side of the screen', async ({ page }) => {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
   expect(overflow).toBe(0)
 })
+
+// A page that took the lock and then stopped answering: one the browser froze, kept for Back, or loaded unseen
+async function openStuckHolder(context) {
+  await context.route('**/stuck-holder', (route) =>
+    route.fulfill({
+      contentType: 'text/html',
+      body: `<script>navigator.locks.request('forest-timer:this-tab', () => new Promise(() => {}))</script>`,
+    }),
+  )
+  const stuck = await context.newPage()
+  await stuck.goto('/stuck-holder')
+  await stuck.waitForFunction(async () => (await navigator.locks.query()).held.length === 1)
+  return stuck
+}
+
+test('rule 8: a page that holds the tab check but never answers doesn\'t lock you out; after half a second you get the app', async ({ page, context }) => {
+  await openStuckHolder(context)
+  await openAtNine(page)
+  await page.clock.runFor(600)
+  await expect(page.getByRole('timer')).toHaveText('25:00')
+  await expect(page.getByText(anotherTab)).toHaveCount(0)
+})
+
+test('rule 8: a tab that has the app taken over shows only the line, and never runs a second timer', async ({ page, context }) => {
+  await openAtNine(page)
+  await expect(page.getByRole('timer')).toHaveText('25:00')
+  // Take the lock over the way a new tab does when this one doesn't answer
+  await context.route('**/blank', (route) => route.fulfill({ contentType: 'text/html', body: '' }))
+  const other = await context.newPage()
+  await other.goto('/blank')
+  await other.evaluate(() => {
+    navigator.locks.request('forest-timer:this-tab', { steal: true }, () => new Promise(() => {}))
+  })
+  await expect(page.getByText(anotherTab)).toBeVisible()
+  await expect(page.getByRole('timer')).toHaveCount(0)
+})
