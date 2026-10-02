@@ -529,6 +529,83 @@ test('opening fresh mid-session doesn\'t carry on, and a later reload doesn\'t b
   await expect(reopened.getByRole('img', { name: /tree/i })).toHaveCount(0)
 })
 
+// Opens the app again in a new tab at the given time; the test clock carries across tabs.
+async function reopenAt(context, time) {
+  const reopened = await context.newPage()
+  await reopened.clock.setSystemTime(time)
+  await reopened.goto('/')
+  return reopened
+}
+
+const aboutNineTen = (endedAt) => Math.abs(endedAt - (nine.getTime() + minutes(10)))
+
+test('rule 6: start at 9:00, close the tab at 9:10, reopen: no tree, and the timer is on ready', async ({ page, context }) => {
+  await openAtNine(page)
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(minutes(10) + 500)
+  await page.close()
+  const reopened = await reopenAt(context, new Date('2026-10-01T09:30:00'))
+  await expect(reopened.getByRole('timer')).toHaveText('25:00')
+  await expect(reopened.getByRole('button', { name: 'Start' })).toBeVisible()
+  await expect(reopened.getByRole('img', { name: /tree/i })).toHaveCount(0)
+  await expect(reopened.getByText('Finish a session to grow your first tree.')).toBeVisible()
+})
+
+test('rule 6: the session is saved as given up, ended about 9:10 (to within a few seconds)', async ({ page, context }) => {
+  await openAtNine(page)
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(minutes(10) + 500)
+  await page.close()
+  const reopened = await reopenAt(context, new Date('2026-10-01T09:30:00'))
+  await expect(reopened.getByRole('timer')).toHaveText('25:00')
+  const records = await sessionRecords(reopened)
+  expect(records).toHaveLength(1)
+  expect(records[0].startedAt).toBe(nine.getTime())
+  expect(records[0].ended).toBe('gave up')
+  expect(aboutNineTen(records[0].endedAt)).toBeLessThanOrEqual(3000)
+})
+
+test('rule 7: a crash is the same as a close: no goodbye from the page, still given up about the moment it stopped', async ({ page, context }) => {
+  await openAtNine(page)
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(minutes(10) + 500)
+  // Crash the page for real: it gets no chance to note anything on the way out
+  const devtools = await context.newCDPSession(page)
+  const crashed = page.waitForEvent('crash')
+  devtools.send('Page.crash').catch(() => {})
+  await crashed
+  await page.close()
+  const reopened = await reopenAt(context, new Date('2026-10-01T09:30:00'))
+  await expect(reopened.getByRole('timer')).toHaveText('25:00')
+  await expect(reopened.getByRole('img', { name: /tree/i })).toHaveCount(0)
+  const records = await sessionRecords(reopened)
+  expect(records).toHaveLength(1)
+  expect(records[0].ended).toBe('gave up')
+  expect(aboutNineTen(records[0].endedAt)).toBeLessThanOrEqual(3000)
+})
+
+test('a phone locked at 9:10 and closed at 9:40 without unlocking: given up, ended about 9:10 (decided 2026-10-02)', async ({ page, context }) => {
+  await openAtNine(page)
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.clock.runFor(minutes(10))
+  // Locked: the page is hidden, then frozen until 9:40, when the tab is closed
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' })
+    document.dispatchEvent(new Event('visibilitychange'))
+    // Frozen from here: it can't tick or notice being hidden again on the way out
+    document.addEventListener('visibilitychange', (event) => event.stopImmediatePropagation(), true)
+  })
+  await page.clock.setSystemTime(new Date('2026-10-01T09:40:00'))
+  await page.close({ runBeforeUnload: true })
+  const reopened = await reopenAt(context, new Date('2026-10-01T09:45:00'))
+  await expect(reopened.getByRole('timer')).toHaveText('25:00')
+  await expect(reopened.getByRole('img', { name: /tree/i })).toHaveCount(0)
+  const records = await sessionRecords(reopened)
+  expect(records).toHaveLength(1)
+  expect(records[0].ended).toBe('gave up')
+  expect(aboutNineTen(records[0].endedAt)).toBeLessThanOrEqual(3000)
+})
+
 test('a reload after a session ended opens on ready', async ({ page }) => {
   await openAtNine(page)
   await page.getByRole('button', { name: 'Start' }).click()

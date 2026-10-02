@@ -3,7 +3,7 @@ import { defineConfig } from '@playwright/test'
 export default defineConfig({
   testDir: 'e2e',
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://localhost:5174',
   },
   projects: [
     { name: 'laptop', use: { viewport: { width: 1440, height: 900 } } },
@@ -11,9 +11,10 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: 'npm run dev',
-      url: 'http://localhost:5173',
-      reuseExistingServer: true,
+      // Its own fresh dev server each run, apart from the one you use on 5173, so checks never see stale code
+      command: 'npm run dev -- --port 5174 --strictPort',
+      url: 'http://localhost:5174',
+      reuseExistingServer: false,
     },
     {
       // The built app, to check that ?fast does nothing there

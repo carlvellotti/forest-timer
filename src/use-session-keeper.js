@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
-import { clearRunningSession, loadRunningSession, saveRunningSession, saveSessionRecord } from './browser-storage'
+import {
+  clearRunningSession,
+  loadLastSeen,
+  loadRunningSession,
+  saveLastSeen,
+  saveRunningSession,
+  saveSessionRecord,
+} from './browser-storage'
 import { playChime, unlockChime } from './chime'
 import { finishedRecord, givenUpRecord, sessionLength, sessionOnOpening, timeLeft } from './session-keeper'
 
@@ -18,7 +25,13 @@ function wasReloaded() {
 let opening
 function openingSession() {
   if (opening === undefined) {
-    opening = sessionOnOpening({ startedAt: loadRunningSession(), reloaded: wasReloaded(), now: Date.now(), length })
+    opening = sessionOnOpening({
+      startedAt: loadRunningSession(),
+      lastSeenAt: loadLastSeen(),
+      reloaded: wasReloaded(),
+      now: Date.now(),
+      length,
+    })
     // Rule 5: a reload after the 25 minutes counts as finished, saved right away. No chime, because
     // browsers won't play sound after a reload until you press something; the ring is enough.
     if (opening?.kind === 'finished') {
@@ -31,13 +44,31 @@ function openingSession() {
         opening = null
       }
     }
-    // Opened fresh after a close or a crash: the session doesn't carry on, and a later reload
-    // mustn't bring it back. (Recording it as a give-up comes with rule 6.)
-    if (opening?.kind === 'opened fresh' || opening?.kind === 'not possible') clearRunningSession()
+    // Rules 6 and 7: opened fresh after a close or a crash, so the session was given up.
+    // It's recorded now, and a later reload mustn't bring it back.
+    if (opening?.kind === 'gave up') {
+      try {
+        saveSessionRecord(opening.record)
+      } catch (error) {
+        console.error('Could not save the session record', error)
+      }
+      clearRunningSession()
+    }
+    if (opening?.kind === 'not possible') clearRunningSession()
     // Rule 4: after a reload, sound stays off until you press something, so any press turns it back on.
     if (opening?.kind === 'carries on') switchSoundOnWithAnyPress()
   }
   return opening
+}
+
+// While a session runs, the page notes it's still open (every tick, and when it's hidden or closed),
+// so a close or a crash can be recorded as ending at about that moment.
+function markSeen(at) {
+  try {
+    saveLastSeen(at)
+  } catch {
+    // Storage full or blocked: a close would be recorded as ending at Start
+  }
 }
 
 function switchSoundOnWithAnyPress() {
@@ -95,6 +126,7 @@ export function useSessionKeeper({ onEnded }) {
       if (finished) return
       const tickedAt = Date.now()
       if (timeLeft(startedAt, tickedAt, length) > 0) {
+        markSeen(tickedAt)
         setNow(tickedAt)
         return
       }
@@ -108,12 +140,20 @@ export function useSessionKeeper({ onEnded }) {
       interval = setInterval(tick, 1000)
     }, left % 1000 || 1000)
     const endTimer = setTimeout(tick, left)
+    // Closing the tab: the last moment the page was open (rule 6). Only if it's awake and in view:
+    // a phone locked at 9:10 and closed at 9:40 ended at 9:10, already noted when it was hidden.
+    const closing = () => {
+      const closedAt = Date.now()
+      if (document.visibilityState === 'visible' && timeLeft(startedAt, closedAt, length) > 0) markSeen(closedAt)
+    }
     document.addEventListener('visibilitychange', tick)
+    window.addEventListener('pagehide', closing)
     return () => {
       clearTimeout(firstTick)
       clearInterval(interval)
       clearTimeout(endTimer)
       document.removeEventListener('visibilitychange', tick)
+      window.removeEventListener('pagehide', closing)
     }
   }, [running, startedAt, end])
 
@@ -122,6 +162,7 @@ export function useSessionKeeper({ onEnded }) {
     const pressedAt = Date.now()
     try {
       saveRunningSession(pressedAt)
+      saveLastSeen(pressedAt)
     } catch (error) {
       // Storage full or blocked: the session still runs, it just can't survive a reload
       console.error('Could not save the running session', error)

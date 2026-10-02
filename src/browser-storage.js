@@ -49,6 +49,8 @@ export function treesFrom(records) {
 
 // While a session runs, the moment Start was pressed is saved too, so a reload can pick it back up.
 const RUNNING_SESSION_KEY = 'forest-timer:running-session'
+// And the last moment the page was seen open, so a close or a crash knows when the session ended.
+const LAST_SEEN_KEY = 'forest-timer:running-session-last-seen'
 
 export function saveRunningSession(startedAt) {
   localStorage.setItem(RUNNING_SESSION_KEY, new Date(startedAt).toISOString())
@@ -63,9 +65,23 @@ export function loadRunningSession() {
   }
 }
 
+export function saveLastSeen(at) {
+  localStorage.setItem(LAST_SEEN_KEY, new Date(at).toISOString())
+}
+
+export function loadLastSeen() {
+  try {
+    const at = Date.parse(localStorage.getItem(LAST_SEEN_KEY))
+    return Number.isFinite(at) ? at : null
+  } catch {
+    return null
+  }
+}
+
 export function clearRunningSession() {
   try {
     localStorage.removeItem(RUNNING_SESSION_KEY)
+    localStorage.removeItem(LAST_SEEN_KEY)
   } catch {
     // Storage blocked: nothing was saved to clear
   }

@@ -77,10 +77,46 @@ test('rule 5: a reload at 9:40 counts as finished, ended 9:25', () => {
   ).toEqual({ kind: 'finished', record: finishedRecord(nine, SESSION_LENGTH_MS) })
 })
 
-test('opening fresh (not a reload) with a session running is left for the close rule', () => {
+test('rule 6: closed at 9:10 (last seen), opened again at 10:00: given up, ended 9:10', () => {
   expect(
-    sessionOnOpening({ startedAt: nine, reloaded: false, now: nine + minutes(10), length: SESSION_LENGTH_MS }),
-  ).toEqual({ kind: 'opened fresh', startedAt: nine })
+    sessionOnOpening({
+      startedAt: nine,
+      lastSeenAt: nine + minutes(10),
+      reloaded: false,
+      now: nine + minutes(60),
+      length: SESSION_LENGTH_MS,
+    }),
+  ).toEqual({ kind: 'gave up', record: givenUpRecord(nine, nine + minutes(10)) })
+})
+
+test('rule 6: with no last-seen time saved, the give-up ends at Start', () => {
+  expect(
+    sessionOnOpening({ startedAt: nine, reloaded: false, now: nine + minutes(60), length: SESSION_LENGTH_MS }),
+  ).toEqual({ kind: 'gave up', record: givenUpRecord(nine, nine) })
+})
+
+test('a close is always a give-up, ended no later than the end of the session', () => {
+  expect(
+    sessionOnOpening({
+      startedAt: nine,
+      lastSeenAt: nine + minutes(40),
+      reloaded: false,
+      now: nine + minutes(60),
+      length: SESSION_LENGTH_MS,
+    }),
+  ).toEqual({ kind: 'gave up', record: givenUpRecord(nine, nine + minutes(25)) })
+})
+
+test('locked at 9:10, closed at 9:40 without unlocking: given up, ended 9:10 (decided 2026-10-02)', () => {
+  expect(
+    sessionOnOpening({
+      startedAt: nine,
+      lastSeenAt: nine + minutes(10),
+      reloaded: false,
+      now: nine + minutes(41),
+      length: SESSION_LENGTH_MS,
+    }).record.ended,
+  ).toBe('gave up')
 })
 
 test('rule 5: a reload exactly at 9:25 counts as finished', () => {

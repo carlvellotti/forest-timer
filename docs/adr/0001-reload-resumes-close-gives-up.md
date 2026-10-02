@@ -38,3 +38,12 @@ A late reload grows the tree, with its ring, but plays no chime. After a reload,
 ## Addendum: a locked phone, then a close (2026-10-02)
 
 Start at 9:00, lock the phone at 9:10, and close the tab at 9:40 without unlocking. Rule 6 (a close is a give-up) and rule 9 (a session that finishes while asleep grows its tree) pull different ways here, and a frozen page can't tell "still locked" from "closed". It counts as a give-up, ended about 9:10, the last moment the page was awake. The alternative, "finished if 25 minutes passed before the app was opened again", would also grow a tree for a close at 9:12 followed by reopening at 10:00.
+
+## Addendum: how a close knows when it ended (2026-10-02)
+
+While a session runs, the page notes "last seen" every second, when it's hidden, and when it's closed while awake and in view. A close or a crash is recorded as a give-up ended at that last-seen moment, never later than the end of the session.
+
+Trade-offs accepted:
+- In a background tab, Chrome slows the once-a-second note to about once a minute after 5 minutes, so a crash there can be recorded up to about a minute early. A plain close still notes the exact moment.
+- A session with no last-seen moment (started before this change, or storage failed) is recorded as ending at Start.
+- A close is always a give-up, even if the page was last seen at the very end: an awake page finishes the session itself before that can happen.

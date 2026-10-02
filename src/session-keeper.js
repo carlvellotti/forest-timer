@@ -43,12 +43,16 @@ export function givenUpRecord(startedAt, endedAt) {
 
 // A session was running when the page opened (docs/adr/0001):
 // a reload before the 25 minutes are up carries on; a reload after counts as finished.
-// Opening fresh after a close or a crash is handled separately.
+// Opening fresh means the tab or browser was closed, or crashed (rules 6 and 7): a give-up,
+// ended the last moment the page was seen open and awake.
 // A start time in the future (the clock was moved back) can't be a real session.
-export function sessionOnOpening({ startedAt, reloaded, now, length }) {
+export function sessionOnOpening({ startedAt, lastSeenAt = null, reloaded, now, length }) {
   if (startedAt === null) return null
   if (startedAt > now) return { kind: 'not possible', startedAt }
-  if (!reloaded) return { kind: 'opened fresh', startedAt }
+  if (!reloaded) {
+    const endedAt = Math.min(Math.max(lastSeenAt ?? startedAt, startedAt), now, startedAt + length)
+    return { kind: 'gave up', record: givenUpRecord(startedAt, endedAt) }
+  }
   if (timeLeft(startedAt, now, length) > 0) return { kind: 'carries on', startedAt }
   return { kind: 'finished', record: finishedRecord(startedAt, length) }
 }
