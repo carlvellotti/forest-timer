@@ -10,7 +10,7 @@ What it is and why: idea.md. What we're building: docs/specs/. 2026-10-01-spec.m
 - See: open the app in the browser at phone (390px) and laptop (1440px) width.
 - On your phone: run `npm run dev -- --host` on your home wifi and open the Network address it prints.
 - To try a session by hand, open the dev app with `?fast` and a session lasts 25 seconds.
-- Save: commit with a one-line note.
+- Save: commit with a one-line note. After every commit, push to GitHub.
 
 ## Rules
 - A slice isn't done until its checks pass.
