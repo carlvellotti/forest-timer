@@ -2,10 +2,34 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { loadSessionRecords, treesFrom } from './browser-storage'
 import Forest from './Forest'
+import Stats from './Stats'
 import { formatTimeLeft, tabTitle } from './session-keeper'
 import { sessionFinishedOnOpening, useSessionKeeper } from './use-session-keeper'
 
+// The app's two pages: the timer and forest at /, and the stats page at /stats.
+const onStatsPage = () => window.location.pathname.replace(/\/+$/, '') === '/stats'
+
+// Moves between the pages without loading the page again, keeping the address (and ?fast) in step.
+function goTo(path) {
+  return (event) => {
+    event.preventDefault()
+    window.history.pushState(null, '', path + window.location.search)
+    window.dispatchEvent(new PopStateEvent('popstate'))
+  }
+}
+
+function useStatsPage() {
+  const [statsPage, setStatsPage] = useState(onStatsPage)
+  useEffect(() => {
+    const follow = () => setStatsPage(onStatsPage())
+    window.addEventListener('popstate', follow)
+    return () => window.removeEventListener('popstate', follow)
+  }, [])
+  return statsPage
+}
+
 function App() {
+  const statsPage = useStatsPage()
   // The tree you just grew keeps its ring until you press Start again or leave the page.
   // That includes a session that finished while the page was away (rule 5), which is
   // settled first, so the forest loaded below already has its tree.
@@ -34,8 +58,26 @@ function App() {
     start()
   }
 
+  if (statsPage) {
+    return (
+      <main className="relative min-h-svh">
+        <Stats records={records} onBack={goTo('/')} />
+      </main>
+    )
+  }
+
   return (
-    <main className="min-h-svh">
+    <main className="relative min-h-svh">
+      {/* Only when Ready (rule 6), so it can't pull you away mid-session */}
+      {!running && (
+        <nav className="absolute top-0 right-0 p-screen">
+          <Button variant="link" asChild>
+            <a href={`/stats${window.location.search}`} onClick={goTo('/stats')}>
+              Stats
+            </a>
+          </Button>
+        </nav>
+      )}
       {/* The timer sits a third of the way down and stays put; the forest starts right under its buttons */}
       <section className="flex flex-col items-center px-screen pt-timer-top pb-gap">
         <p className="text-timer tabular-nums" role="timer">

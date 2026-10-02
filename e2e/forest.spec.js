@@ -398,9 +398,14 @@ test('100 trees: on a laptop too, a full row wraps and the next tree starts a ne
 
 test('rule 10: no button anywhere wipes the forest', async ({ page }) => {
   await openWithTrees(page, 40)
-  // Ready: the only thing to press is Start
+  // Ready: the only button is Start, and the only link is Stats (changed 2026-10-02 for the stats page)
   await expect(page.getByRole('button')).toHaveText(['Start'])
-  await expect(page.getByRole('link')).toHaveCount(0)
+  await expect(page.getByRole('link')).toHaveText(['Stats'])
+  // The stats page: the only thing to press is Back to forest
+  await page.getByRole('link', { name: 'Stats' }).click()
+  await expect(page.getByRole('button')).toHaveCount(0)
+  await expect(page.getByRole('link')).toHaveText(['Back to forest'])
+  await page.getByRole('link', { name: 'Back to forest' }).click()
   // Running and asking: only Give up, then Keep going and Give up
   await page.getByRole('button', { name: 'Start' }).click()
   await expect(page.getByRole('button')).toHaveText(['Give up'])

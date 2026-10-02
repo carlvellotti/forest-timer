@@ -101,3 +101,41 @@ test('rule 2: finishing plays the chime once; giving up plays nothing', () => {
   act(() => vi.advanceTimersByTime(60 * 1000))
   expect(playChime).toHaveBeenCalledTimes(1)
 })
+
+// The stats page (2026-10-02 spec)
+
+test('rule 6: the Stats link shows when Ready, is gone while Running, and is back when the session ends', () => {
+  window.history.pushState(null, '', '/')
+  render(<App />)
+  expect(screen.getByRole('link', { name: 'Stats' })).toBeTruthy()
+  fireEvent.click(screen.getByRole('button', { name: 'Start' }))
+  expect(screen.queryByRole('link', { name: 'Stats' })).toBeNull()
+  act(() => vi.advanceTimersByTime(25 * 60 * 1000))
+  expect(screen.getByRole('link', { name: 'Stats' })).toBeTruthy()
+})
+
+test('Stats opens /stats with this week, and Back to forest returns to the timer and forest', () => {
+  window.history.pushState(null, '', '/')
+  render(<App />)
+  fireEvent.click(screen.getByRole('link', { name: 'Stats' }))
+  expect(window.location.pathname).toBe('/stats')
+  expect(screen.getByText('0 sessions this week')).toBeTruthy()
+  expect(screen.queryByRole('timer')).toBeNull()
+  fireEvent.click(screen.getByRole('link', { name: 'Back to forest' }))
+  expect(window.location.pathname).toBe('/')
+  expect(screen.getByRole('timer').textContent).toBe('25:00')
+})
+
+test('a finished session shows on the stats page, counted on today', () => {
+  window.history.pushState(null, '', '/')
+  render(<App />)
+  fireEvent.click(screen.getByRole('button', { name: 'Start' }))
+  act(() => vi.advanceTimersByTime(25 * 60 * 1000))
+  fireEvent.click(screen.getByRole('link', { name: 'Stats' }))
+  expect(screen.getByText('1 session this week')).toBeTruthy()
+  // 2026-10-01 is a Thursday
+  const today = screen.getByRole('columnheader', { name: 'Thu' })
+  expect(today.getAttribute('aria-current')).toBe('date')
+  expect(screen.getAllByRole('cell').map((cell) => cell.textContent)).toEqual(['0', '0', '0', '1', '', '', ''])
+  window.history.pushState(null, '', '/')
+})
