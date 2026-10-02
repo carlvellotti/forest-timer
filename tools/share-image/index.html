@@ -1,0 +1,61 @@
+<!doctype html>
+<!--
+  The share image: what a link preview shows next to the app's name.
+  Laid out at 600x315 with DESIGN.md's own sizes, then saved at 2x (1200x630) by make.mjs.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      @font-face {
+        font-family: 'EB Garamond';
+        font-weight: 400;
+        src: url('../../node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'EB Garamond';
+        font-weight: 500;
+        src: url('../../node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-500-normal.woff2') format('woff2');
+      }
+      html, body { margin: 0; }
+      body {
+        width: 600px;
+        height: 315px;
+        box-sizing: border-box;
+        padding: 26px;
+        background: #EEEBE8;
+        color: #26231F;
+        font-family: 'EB Garamond', Georgia, serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 90px;
+        font-weight: 400;
+        letter-spacing: -0.02em;
+        line-height: 1;
+      }
+      p { margin: 0; font-size: 16px; line-height: 1.5; }
+      hr { width: 100%; margin: 0; border: 0; border-top: 1px solid #CFC9C2; }
+      .forest { display: flex; gap: 10px; }
+      .forest svg { width: 40px; height: 40px; }
+    </style>
+  </head>
+  <body>
+    <h1>Forest Timer</h1>
+    <p>A focus timer that grows a tree every time you finish a session.</p>
+    <hr />
+    <div class="forest">
+      <!-- Same pine as src/Tree.jsx; the last one is the tree you just grew -->
+      <svg viewBox="0 0 24 24"><rect x="10.8" y="16.8" width="2.4" height="4.8" fill="#5B4632" /><polygon points="12,2.4 16.8,9.6 15,9.6 18.6,16.8 5.4,16.8 9,9.6 7.2,9.6" fill="#3D6B47" stroke="#567F5D" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke" /></svg>
+      <svg viewBox="0 0 24 24"><rect x="10.8" y="16.8" width="2.4" height="4.8" fill="#5B4632" /><polygon points="12,2.4 16.8,9.6 15,9.6 18.6,16.8 5.4,16.8 9,9.6 7.2,9.6" fill="#3D6B47" stroke="#567F5D" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke" /></svg>
+      <svg viewBox="0 0 24 24"><rect x="10.8" y="16.8" width="2.4" height="4.8" fill="#5B4632" /><polygon points="12,2.4 16.8,9.6 15,9.6 18.6,16.8 5.4,16.8 9,9.6 7.2,9.6" fill="#3D6B47" stroke="#567F5D" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke" /></svg>
+      <svg viewBox="0 0 24 24"><rect x="10.8" y="16.8" width="2.4" height="4.8" fill="#5B4632" /><polygon points="12,2.4 16.8,9.6 15,9.6 18.6,16.8 5.4,16.8 9,9.6 7.2,9.6" fill="#3D6B47" stroke="#567F5D" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke" /></svg>
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="none" stroke="#E07A3F" stroke-width="1.5" stroke-dasharray="3 2" vector-effect="non-scaling-stroke" /><rect x="10.8" y="16.8" width="2.4" height="4.8" fill="#5B4632" /><polygon points="12,2.4 16.8,9.6 15,9.6 18.6,16.8 5.4,16.8 9,9.6 7.2,9.6" fill="#3D6B47" stroke="#567F5D" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke" /></svg>
+    </div>
+  </body>
+</html>
